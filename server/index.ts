@@ -5,7 +5,7 @@ import {
   getChordDetail,
   getChordLibrary,
   replaceChordShapes,
-} from './chordService'
+} from '../lib/chordService'
 
 const app = express()
 const PORT = Number(process.env.PORT) || 4000

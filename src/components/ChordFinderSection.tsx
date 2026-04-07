@@ -20,8 +20,6 @@ export function ChordFinderSection() {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setLoadError(null)
     fetchChordLibrary()
       .then((lib) => {
         if (!cancelled) setLibrary(lib)
