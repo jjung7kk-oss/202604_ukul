@@ -1,8 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import {
-  getChordDetail,
-  replaceChordShapes,
-} from '../../lib/chordService'
 
 function setCors(res: VercelResponse): void {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -45,6 +41,7 @@ export default async function handler(
       return
     }
     try {
+      const { getChordDetail } = await import('../../lib/chordService')
       const detail = await getChordDetail(root, type)
       res.status(200).json(detail)
     } catch (e) {
@@ -92,6 +89,7 @@ export default async function handler(
       })
     }
     try {
+      const { replaceChordShapes } = await import('../../lib/chordService')
       await replaceChordShapes(root, type, normalized)
       res.status(200).json({ ok: true })
     } catch (e) {

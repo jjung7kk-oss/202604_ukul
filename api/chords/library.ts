@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { getChordLibrary } from '../../lib/chordService'
 
 function setCors(res: VercelResponse): void {
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -21,6 +20,7 @@ export default async function handler(
     return
   }
   try {
+    const { getChordLibrary } = await import('../../lib/chordService')
     const library = await getChordLibrary()
     res.status(200).json(library)
   } catch (e) {
