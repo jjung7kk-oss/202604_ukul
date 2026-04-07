@@ -1,6 +1,11 @@
 {
   "buildCommand": "prisma generate && prisma migrate deploy && npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/chords/**/*.ts": {
+      "includeFiles": "node_modules/.prisma/client/**"
+    }
+  },
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
