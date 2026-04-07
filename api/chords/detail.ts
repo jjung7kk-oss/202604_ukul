@@ -41,7 +41,7 @@ export default async function handler(
       return
     }
     try {
-      const { getChordDetail } = await import('../../lib/chordService')
+      const { getChordDetail } = await import('../../lib/chordService.js')
       const detail = await getChordDetail(root, type)
       res.status(200).json(detail)
     } catch (e) {
@@ -89,7 +89,7 @@ export default async function handler(
       })
     }
     try {
-      const { replaceChordShapes } = await import('../../lib/chordService')
+      const { replaceChordShapes } = await import('../../lib/chordService.js')
       await replaceChordShapes(root, type, normalized)
       res.status(200).json({ ok: true })
     } catch (e) {

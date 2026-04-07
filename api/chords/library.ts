@@ -20,7 +20,7 @@ export default async function handler(
     return
   }
   try {
-    const { getChordLibrary } = await import('../../lib/chordService')
+    const { getChordLibrary } = await import('../../lib/chordService.js')
     const library = await getChordLibrary()
     res.status(200).json(library)
   } catch (e) {
