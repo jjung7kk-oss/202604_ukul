@@ -1,0 +1,668 @@
+````markdown
+# HUICODE UI Design System Spec
+
+## Goal
+Design a responsive UI for **HUICODE**, a ukulele chord finder service.
+
+The UI should feel:
+- easy to read
+- friendly and clean
+- compact enough to fit important content within one laptop screen height
+- usable without difficulty on tablet and mobile widths
+
+The service should prioritize:
+- fast recognition
+- quick selection flow
+- clear information hierarchy
+- compact but not cramped layout
+
+---
+
+# 1. Typography System
+
+## 1-1. Base Font Stack
+Use a system-font-first stack for readability, performance, and broad device/browser compatibility.
+
+```css
+font-family:
+  -apple-system,
+  BlinkMacSystemFont,
+  "Apple SD Gothic Neo",
+  "Pretendard",
+  "Noto Sans KR",
+  "Malgun Gothic",
+  "Segoe UI",
+  Roboto,
+  Helvetica,
+  Arial,
+  sans-serif;
+````
+
+## 1-2. Typography Principles
+
+* Readability comes first
+* Friendly and modern tone
+* Avoid overly decorative fonts
+* Keep text compact enough for tool-like UI
+* Maintain strong hierarchy between title, section title, body, and labels
+* Desktop and mobile should share the same visual logic
+
+## 1-3. Typography Styles
+
+### Display
+
+* Use for hero title only
+* Size: **32px**
+* Weight: **700**
+* Line height: **1.2**
+
+Mobile:
+
+* Size: **28px**
+* Weight: **700**
+* Line height: **1.2**
+
+### Heading 1
+
+* Use for major page titles
+* Size: **24px**
+* Weight: **700**
+* Line height: **1.3**
+
+Mobile:
+
+* Size: **22px**
+* Weight: **700**
+* Line height: **1.3**
+
+### Heading 2
+
+* Use for section titles
+* Size: **20px**
+* Weight: **700**
+* Line height: **1.35**
+
+Mobile:
+
+* Size: **18px**
+* Weight: **700**
+* Line height: **1.35**
+
+### Heading 3
+
+* Use for card titles and small panel titles
+* Size: **16px**
+* Weight: **600**
+* Line height: **1.35**
+
+### Body 1
+
+* Use for default body text
+* Size: **15px**
+* Weight: **400**
+* Line height: **1.6**
+
+### Body 2
+
+* Use for secondary explanations
+* Size: **14px**
+* Weight: **400**
+* Line height: **1.55**
+
+### Label 1
+
+* Use for buttons, tabs, chips, selectable UI
+* Size: **14px**
+* Weight: **600**
+* Line height: **1.3**
+
+### Label 2
+
+* Use for metadata, minor labels
+* Size: **12px**
+* Weight: **500**
+* Line height: **1.3**
+
+### Caption
+
+* Use for helper text and subtle supporting text
+* Size: **12px**
+* Weight: **400**
+* Line height: **1.45**
+
+### Chord Title
+
+* Use for chord names like C, Dm, G7, Csus4
+* Size: **18px**
+* Weight: **700**
+* Line height: **1.2**
+
+Mobile:
+
+* Size: **16px**
+* Weight: **700**
+* Line height: **1.2**
+
+---
+
+# 2. Color System
+
+Use the selected bright sky blue direction.
+
+## Brand / UI Colors
+
+* **Primary Blue**: `#2F80ED`
+* **Primary Light**: `#A9D0FF`
+* **Page Background**: `#F5F9FF`
+* **Text Main**: `#1F2D3D`
+* **Text Secondary**: `#506070`
+* **Border**: `#E5ECF3`
+* **Card Background**: `#FFFFFF`
+* **Disabled**: `#B7C2CF`
+
+## Recommended Usage
+
+* Primary Blue: selected states, main actions, links, highlights
+* Primary Light: hover backgrounds, selected chip background, soft emphasis
+* Page Background: overall page background
+* Text Main: headings, primary text
+* Text Secondary: helper text, descriptions
+* Border: card borders, dividers, inputs
+* Disabled: disabled buttons and non-active states
+
+---
+
+# 3. Layout Rules
+
+## 3-1. General Layout Goals
+
+* On laptop, the main flow should fit into one vertical screen as much as possible
+* At minimum, the user should see:
+
+  * header
+  * intro / hero
+  * chord selection area
+  * top of result area
+* On smaller widths, layout should stack cleanly without breaking usability
+
+## 3-2. Breakpoints
+
+* **Desktop / Laptop**: `1280px+`
+* **Tablet**: `768px - 1279px`
+* **Mobile**: `0px - 767px`
+
+## 3-3. Container
+
+### Desktop
+
+* Max width: **1120px**
+* Horizontal padding: **24px**
+* Vertical padding: **24px 24px 32px**
+
+### Tablet
+
+* Padding: **20px**
+
+### Mobile
+
+* Padding: **16px**
+
+---
+
+# 4. Spacing System
+
+Use a simple 4px-based spacing scale.
+
+* `4px`
+* `8px`
+* `12px`
+* `16px`
+* `20px`
+* `24px`
+* `32px`
+
+## Recommended Use
+
+* Tiny internal spacing: `8px`
+* Label to field spacing: `8px`
+* Card internal gap: `12px`
+* Card padding: `16px`
+* Section gap: `20px ~ 24px`
+
+---
+
+# 5. Core Component Style Definitions
+
+## 5-1. Header
+
+### Purpose
+
+Top identity area with logo symbol and service name.
+
+### Style
+
+* Height: **64px**
+* Layout: horizontal flex
+* Align: center
+* Gap: **12px**
+* Symbol size: **28px ~ 32px**
+* Service name text: use **Heading 3** or **18px / 700**
+* Optional helper text: **14px / 400**
+
+### Mobile
+
+* Height: **56px**
+* Helper text may be hidden if needed
+
+---
+
+## 5-2. Hero / Intro Section
+
+### Purpose
+
+Short intro block at the top of the page.
+
+### Content
+
+* Main title
+* Short description
+* Optional CTA or direct selection entry
+
+### Style
+
+* Padding: **20px**
+* Border radius: **20px**
+* Internal gap: **10px**
+* Background: soft blue / light background
+* Title: **Display** or **Heading 1**
+* Description: **Body 1**
+
+### Mobile
+
+* Padding: **16px**
+* Use Heading 1 instead of Display if vertical space is tight
+
+### Rule
+
+Keep intro text short. Ideally 2 to 3 lines maximum.
+
+---
+
+## 5-3. Section Card
+
+### Purpose
+
+Default white content container.
+
+### Style
+
+* Background: `#FFFFFF`
+* Border: `1px solid #E5ECF3`
+* Border radius: **16px**
+* Padding: **16px**
+* Internal gap: **12px**
+* Shadow: none or very subtle only
+
+### Mobile
+
+* Padding: **14px**
+* Radius: **14px**
+
+---
+
+## 5-4. Tab / Option Chip
+
+### Purpose
+
+Used for root note selection and chord type selection.
+
+### Style
+
+* Min height: **40px**
+* Padding: **0 14px**
+* Border radius: **999px**
+* Font: **Label 1**
+* Border: `1px solid #E5ECF3`
+* Background: `#FFFFFF`
+* Text: `#1F2D3D`
+
+### Selected
+
+* Background: `#2F80ED`
+* Text: `#FFFFFF`
+* Border color: `#2F80ED`
+
+### Hover
+
+* Background: `#F5F9FF`
+
+### Mobile
+
+* Min height: **38px**
+* Padding: **0 12px**
+* Font size: **13px ~ 14px**
+
+### Rule
+
+Chips should be compact but easy to tap. Avoid oversized pill buttons.
+
+---
+
+## 5-5. Primary Button
+
+### Purpose
+
+Main action button.
+
+### Style
+
+* Min height: **44px**
+* Padding: **0 16px**
+* Border radius: **12px**
+* Font: **Label 1**
+* Background: `#2F80ED`
+* Text: `#FFFFFF`
+
+### Hover
+
+* Slightly darker blue than primary
+
+### Disabled
+
+* Background: `#B7C2CF`
+* Text: `#FFFFFF`
+
+### Mobile
+
+* Full width is allowed
+* Keep height **44px**
+
+---
+
+## 5-6. Secondary Button
+
+### Purpose
+
+Secondary action.
+
+### Style
+
+* Min height: **40px**
+* Padding: **0 14px**
+* Border radius: **12px**
+* Background: `#FFFFFF`
+* Border: `1px solid #E5ECF3`
+* Text: `#1F2D3D`
+* Font: **Label 1**
+
+---
+
+## 5-7. Input / Search Field
+
+### Purpose
+
+Search or typed input if needed later.
+
+### Style
+
+* Height: **44px**
+* Padding: **0 14px**
+* Border radius: **12px**
+* Border: `1px solid #E5ECF3`
+* Font: **Body 2**
+* Text: `#1F2D3D`
+* Placeholder: `#506070`
+
+### Focus
+
+* Border color: `#2F80ED`
+* Soft focus ring optional
+* No harsh default outline
+
+---
+
+## 5-8. Chord Result Card
+
+### Purpose
+
+Display one chord fingering result.
+
+### Content
+
+* Chord title
+* Chord diagram
+* Optional metadata or action buttons
+
+### Style
+
+* Padding: **14px**
+* Border radius: **16px**
+* Border: `1px solid #E5ECF3`
+* Internal gap: **10px**
+* Background: `#FFFFFF`
+
+### Chord Name
+
+* Use **Chord Title**
+* 18px / 700 / 1.2
+
+### Description / Meta
+
+* 14px / 400 / 1.55
+
+### Layout Rule
+
+* Desktop: support up to 4 result cards without excessive vertical growth
+* Use 4-column or 2x2 layout depending on available width
+* Do not make cards unnecessarily tall
+
+### Mobile
+
+* Prefer 1-column if diagram readability becomes too small
+* 2-column is acceptable only if diagram still reads clearly
+
+---
+
+## 5-9. Chord Diagram Area
+
+### Purpose
+
+Primary visual content inside a result card.
+
+### Recommended Size
+
+* Desktop: **120px ~ 140px square**
+* Tablet: **110px ~ 130px square**
+* Mobile: **96px ~ 120px square**
+
+### Rule
+
+This area should visually dominate the card more than supporting text.
+
+---
+
+## 5-10. Helper Text / Empty State
+
+### Purpose
+
+Explain what to do or indicate an empty result state.
+
+### Style
+
+* Font: **Body 2** or **Caption**
+* Color: `#506070`
+
+### Example Tone
+
+* “코드를 선택하면 운지를 확인할 수 있어요.”
+* Keep it short and supportive
+
+---
+
+# 6. Responsive Behavior
+
+## 6-1. Desktop / Laptop
+
+### Goal
+
+Fit the following into one main screen as much as possible:
+
+1. Header
+2. Hero
+3. Chord selection area
+4. Result area start
+
+### Recommended Flow
+
+* Header
+* Intro / hero
+* Root note selection
+* Chord type selection
+* Result cards
+
+### Important
+
+Vertical spacing should stay controlled. Avoid oversized hero sections.
+
+---
+
+## 6-2. Tablet
+
+### Goal
+
+Maintain usability without horizontal crowding.
+
+### Behavior
+
+* Header remains compact
+* Intro reduces slightly
+* Selection blocks can stack
+* Result cards use 2 columns if readable
+
+---
+
+## 6-3. Mobile
+
+### Goal
+
+Preserve interaction flow over density.
+
+### Behavior
+
+* Header compact
+* Intro shorter
+* Root selection and chord type selection stack vertically
+* Result cards use 1 column by default
+* 2 columns only if diagram remains readable
+
+### Important
+
+Do not force desktop density into mobile. Clear selection flow is more important.
+
+---
+
+# 7. Suggested Page Structure
+
+## Recommended Main Structure
+
+1. **Header**
+2. **Hero / Intro**
+3. **Chord Selection Section**
+
+   * Root note chips
+   * Chord type chips
+4. **Result Section**
+
+   * Up to 4 chord cards
+
+## Height Principle
+
+The first viewport on laptop should show the user enough to understand and start using the service immediately.
+
+---
+
+# 8. Interaction / Accessibility Rules
+
+## Minimum Rules
+
+* Body text should not go below **14px**
+* Tap target height should be at least **40px**, preferably **44px**
+* Selected states should be distinguishable by more than color if possible
+* Maintain sufficient contrast between text and background
+* Keep chip spacing at least **8px**
+
+## UX Priority
+
+This is a utility tool. Clarity and tap success matter more than ornamental design.
+
+---
+
+# 9. Design Tokens
+
+```css
+:root {
+  --font-family:
+    -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Pretendard", "Noto Sans KR", "Malgun Gothic",
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --color-primary: #2F80ED;
+  --color-primary-light: #A9D0FF;
+  --color-bg-page: #F5F9FF;
+  --color-bg-card: #FFFFFF;
+  --color-text-main: #1F2D3D;
+  --color-text-sub: #506070;
+  --color-border: #E5ECF3;
+  --color-disabled: #B7C2CF;
+
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+}
+```
+
+---
+
+# 10. Typography Tokens
+
+```css
+:root {
+  --font-display: 700 32px/1.2 var(--font-family);
+  --font-h1: 700 24px/1.3 var(--font-family);
+  --font-h2: 700 20px/1.35 var(--font-family);
+  --font-h3: 600 16px/1.35 var(--font-family);
+  --font-body-1: 400 15px/1.6 var(--font-family);
+  --font-body-2: 400 14px/1.55 var(--font-family);
+  --font-label-1: 600 14px/1.3 var(--font-family);
+  --font-label-2: 500 12px/1.3 var(--font-family);
+  --font-caption: 400 12px/1.45 var(--font-family);
+  --font-chord: 700 18px/1.2 var(--font-family);
+}
+```
+
+---
+
+# 11. Implementation Notes for Cursor
+
+When generating the UI:
+
+* keep the layout vertically compact
+* do not make the hero too tall
+* prioritize showing selection UI early
+* ensure result cards stay readable at smaller widths
+* use clean card-based layout
+* preserve strong spacing consistency
+* keep the overall tone friendly, simple, and practical
+* avoid overly playful or decorative UI patterns
+
+```
+```
