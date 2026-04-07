@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { fetchChordLibrary } from '../api/chordsApi'
 import {
   getChordDisplayName,
-  getChordShapes,
+  getChordShapesFromLibrary,
   QUALITY_ORDER,
   ROOT_ORDER,
 } from '../data/chordData'
-import type { ChordQuality, RootName } from '../types/chord'
+import type { ChordLibrary, ChordQuality, RootName } from '../types/chord'
 import { ChordShapeGrid } from './ChordShapeGrid'
 import { QualityTabs } from './QualityTabs'
 import { RootTabs } from './RootTabs'
@@ -13,8 +14,38 @@ import { RootTabs } from './RootTabs'
 export function ChordFinderSection() {
   const [root, setRoot] = useState<RootName>('C')
   const [quality, setQuality] = useState<ChordQuality>('major')
+  const [library, setLibrary] = useState<ChordLibrary | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const shapes = useMemo(() => getChordShapes(root, quality), [root, quality])
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setLoadError(null)
+    fetchChordLibrary()
+      .then((lib) => {
+        if (!cancelled) setLibrary(lib)
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setLoadError(
+            e instanceof Error ? e.message : '데이터를 불러오지 못했습니다.',
+          )
+          setLibrary(null)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const shapes = useMemo(
+    () => getChordShapesFromLibrary(library, root, quality),
+    [library, root, quality],
+  )
 
   const chordTitle = getChordDisplayName(root, quality)
 
@@ -28,6 +59,18 @@ export function ChordFinderSection() {
           루트와 코드 타입을 고르면 운지를 바로 확인할 수 있어요.
         </p>
       </div>
+
+      {loadError ? (
+        <p className="chord-finder__load-error" role="alert">
+          {loadError} API 서버가 실행 중인지 확인해 주세요. (
+          <code>npm run dev</code>)
+        </p>
+      ) : null}
+      {loading ? (
+        <p className="chord-finder__load-hint" aria-live="polite">
+          코드 데이터를 불러오는 중…
+        </p>
+      ) : null}
 
       <div className="chord-finder__workspace">
         <div className="chord-finder__panel chord-finder__panel--selection">

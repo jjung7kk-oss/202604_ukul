@@ -6,6 +6,22 @@ import type {
   RootName,
 } from '../types/chord'
 
+/** 코드수정·DB 시드용 표준 루트 (동음이름 제외) */
+export const CANONICAL_ROOTS = [
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B',
+] as const satisfies readonly CanonicalRootName[]
+
 export const ROOT_ORDER: RootName[] = [
   'C',
   'C#',
@@ -266,7 +282,13 @@ export function getCanonicalRoot(root: RootName): CanonicalRootName {
   return ROOT_ALIAS[root]
 }
 
-export function getChordShapes(root: RootName, quality: ChordQuality): ChordShape[] {
+/** DB에서 받은 라이브러리에서 shape 조회 (최대 4개) */
+export function getChordShapesFromLibrary(
+  library: ChordLibrary | null,
+  root: RootName,
+  quality: ChordQuality,
+): ChordShape[] {
+  if (!library) return []
   const canonical = getCanonicalRoot(root)
-  return chordLibrary[canonical][quality].shapes.slice(0, 4)
+  return library[canonical]?.[quality]?.shapes?.slice(0, 4) ?? []
 }

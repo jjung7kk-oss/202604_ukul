@@ -1,0 +1,32 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Chord {
+  id        String   @id @default(cuid())
+  root      String
+  type      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  shapes    ChordShape[]
+
+  @@unique([root, type])
+}
+
+model ChordShape {
+  id         String @id @default(cuid())
+  chordId    String
+  chord      Chord  @relation(fields: [chordId], references: [id], onDelete: Cascade)
+  orderIndex Int
+  g          Int
+  c          Int
+  e          Int
+  a          Int
+
+  @@index([chordId, orderIndex])
+}
