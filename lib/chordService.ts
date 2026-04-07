@@ -1,5 +1,5 @@
 import type { ChordLibrary, ChordQuality, ChordShape } from '../src/types/chord'
-import { prisma } from './db'
+import { prisma } from './db.js'
 
 const CANONICAL_ROOTS = [
   'C',
