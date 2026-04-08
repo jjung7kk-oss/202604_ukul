@@ -123,7 +123,7 @@ export function ChordEditPage() {
           코드 수정
         </h1>
         <p className="chord-finder__hero-desc">
-          표준 루트음 기준으로 운지를 편집합니다. 적용 후 코드찾기에 반영돼요.
+          코드 모양을 직접 바꾸고 저장할 수 있어요.
         </p>
       </div>
 

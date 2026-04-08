@@ -51,17 +51,11 @@ export function ChordDataFallbackBanner({ info }: Props) {
       <p className="chord-finder__load-hint" role="status">
         {import.meta.env.DEV ? (
           <>
-            API 서버는 응답했지만 오류입니다
-            {st != null ? (
-              <>
-                {' '}
-                (HTTP {st})
-              </>
-            ) : null}
-            . 로컬이면 프로젝트 루트 <code>.env</code>의{' '}
-            <code>DATABASE_URL</code>과 <code>npx prisma migrate dev</code>·
-            <code>npm run db:seed</code>를 확인하세요. Vercel이면 해당 환경 변수와
-            Functions 로그를 확인하세요.
+            서버에서 데이터를 가져오지 못했어요
+            {st != null ? ` (HTTP ${st})` : ''}. 지금은 앱에 들어있는 코드표를
+            보여드려요. 로컬은 <code>.env</code>의 <code>DATABASE_URL</code>을 확인하고{' '}
+            <code>npx prisma migrate dev</code>, <code>npm run db:seed</code>를
+            한 번 실행해 주세요. Vercel은 환경 변수와 Functions 로그를 확인해 주세요.
           </>
         ) : (
           <>

@@ -58,9 +58,6 @@ export function ChordFinderSection() {
         </p>
       </div>
 
-      {!loading && library && libraryLoadInfo?.source === 'fallback' ? (
-        <ChordDataFallbackBanner info={libraryLoadInfo} />
-      ) : null}
       {loading ? (
         <p className="chord-finder__load-hint" aria-live="polite">
           코드 데이터를 불러오는 중…
@@ -91,11 +88,15 @@ export function ChordFinderSection() {
 
         <div className="chord-finder__panel chord-finder__panel--results">
           <div className="section-card section-card--flush">
-            <h2 className="chord-finder__heading">코드표</h2>
+            <h2 className="chord-finder__heading">운지방법</h2>
             <ChordShapeGrid shapes={shapes} />
           </div>
         </div>
       </div>
+
+      {!loading && library && libraryLoadInfo?.source === 'fallback' ? (
+        <ChordDataFallbackBanner info={libraryLoadInfo} />
+      ) : null}
     </section>
   )
 }

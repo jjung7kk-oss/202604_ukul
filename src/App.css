@@ -150,7 +150,7 @@
 }
 
 .chord-finder__hero {
-  padding: var(--space-5);
+  padding: 14px 16px;
   border-radius: var(--radius-lg);
   background: linear-gradient(
     135deg,
@@ -158,33 +158,33 @@
     var(--color-bg-card) 55%
   );
   border: 1px solid var(--color-border);
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
 }
 
 .chord-finder__hero-title {
-  font: var(--font-display);
+  font: 700 24px/1.2 var(--font-family);
   margin: 0;
   letter-spacing: -0.02em;
   color: var(--color-text-main);
 }
 
 .chord-finder__hero-desc {
-  font: var(--font-body-1);
+  font: 400 13px/1.45 var(--font-family);
   margin: 0;
   color: var(--color-text-sub);
   max-width: 42em;
 }
 
 .chord-finder__hero--compact .chord-finder__hero-title {
-  font: var(--font-h1);
+  font: 700 20px/1.25 var(--font-family);
 }
 
 .chord-finder__hero--compact {
-  margin-bottom: var(--space-4);
-  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-3);
+  padding: 12px 14px;
 }
 
 .chord-finder__load-error {
@@ -206,14 +206,14 @@
 .chord-finder__workspace {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-3);
 }
 
 @media (min-width: 1280px) {
   .chord-finder__workspace {
     display: grid;
     grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
-    gap: var(--space-5);
+    gap: var(--space-4);
     align-items: start;
   }
 
@@ -232,10 +232,10 @@
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: var(--space-4);
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
 }
 
 .section-card--flush {
@@ -244,23 +244,23 @@
 
 @media (max-width: 767px) {
   .section-card {
-    padding: 14px;
+    padding: 10px;
     border-radius: 14px;
   }
 
   .chord-finder__hero {
-    padding: var(--space-4);
+    padding: 10px 12px;
   }
 }
 
 .chord-finder__heading {
-  font: var(--font-h2);
+  font: 700 16px/1.3 var(--font-family);
   margin: 0;
   color: var(--color-text-main);
 }
 
 .chord-finder__selected {
-  padding: var(--space-3) var(--space-4);
+  padding: 10px 12px;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   background: var(--color-bg-card);
@@ -268,6 +268,35 @@
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--space-2) var(--space-3);
+}
+
+@media (max-width: 1279px) {
+  .chord-finder__hero-title {
+    font-size: 22px;
+  }
+
+  .chord-finder__hero--compact .chord-finder__hero-title {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 767px) {
+  .chord-finder__hero-title {
+    font-size: 20px;
+  }
+
+  .chord-finder__hero--compact .chord-finder__hero-title {
+    font-size: 17px;
+  }
+
+  .chord-finder__hero-desc {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .chord-finder__heading {
+    font-size: 15px;
+  }
 }
 
 .chord-finder__selected-label {
@@ -599,36 +628,55 @@
   gap: var(--space-2);
 }
 
-.transpose-page__chips {
+.transpose-page__builder {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.transpose-page__builder-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.transpose-page__builder-label {
+  font: var(--font-label-2);
+  color: var(--color-text-sub);
+}
+
+.transpose-page__builder-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.transpose-page__builder-picked {
+  font: var(--font-body-2);
+  color: var(--color-text-main);
+}
+
+.transpose-page__picked-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+  gap: var(--space-2);
+}
+
+.transpose-page__picked-item {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
-}
-
-.transpose-page__chip {
-  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 0 14px;
-  border-radius: var(--radius-pill);
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--color-border);
   background: var(--color-bg-page);
-  font: var(--font-label-1);
-  color: var(--color-text-main);
-  cursor: pointer;
-  user-select: none;
-}
-
-.transpose-page__chip:focus-within {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.transpose-page__chip input {
-  margin: 0;
-  accent-color: var(--color-primary);
+  border-radius: var(--radius-sm);
 }
 
 .transpose-page__results {

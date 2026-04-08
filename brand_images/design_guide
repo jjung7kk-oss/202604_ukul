@@ -38,6 +38,41 @@ font-family:
   sans-serif;
 ````
 
+---
+
+## 2026-04 Compact Top Area Update
+
+To increase usable content above the fold, reduce vertical density of intro and section headers.
+
+### A) Hero / Intro Card (All pages)
+- Decrease hero padding (desktop and mobile).
+- Reduce title size clearly from previous display scale.
+- Reduce description size by one level.
+- Tighten title-description gap and hero bottom margin.
+- Keep the same soft gradient tone, but prioritize actionable controls.
+
+### B) Section Title and Card Density
+- Section titles should be smaller than before.
+- Reduce card internal vertical padding and gaps.
+- Keep readability, but avoid large blank areas.
+- Ensure key controls (root/type selection and results) appear earlier on laptop screens.
+
+### C) Responsive Direction
+- Apply the same compact strategy to tablet and mobile.
+- Mobile title/description should be further reduced slightly.
+- Do not sacrifice tap target usability for tabs/buttons.
+
+### D) Friendly Menu Descriptions (Short, Easy)
+- 코드찾기: `루트와 코드 타입을 고르면 운지를 바로 확인할 수 있어요.`
+- 코드수정: `코드 모양을 직접 바꾸고 저장할 수 있어요.`
+- 조변환: `원래 코드를 원하는 키로 쉽게 바꿔볼 수 있어요.`
+
+### E) Finder Section Labels
+- Use concise labels:
+  - `루트음`
+  - `코드 타입`
+  - `운지방법`
+
 ## 1-2. Typography Principles
 
 * Readability comes first
