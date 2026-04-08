@@ -10,6 +10,5 @@ export const prisma =
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   })
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma
-}
+/** Vercel 서버리스에서도 인스턴스 재사용(연결 폭주 완화) */
+globalForPrisma.prisma = prisma

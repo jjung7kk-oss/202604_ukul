@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchChordLibrary } from '../api/chordsApi'
+import {
+  fetchChordLibrary,
+  type ChordLibraryLoadInfo,
+} from '../api/chordsApi'
+import { ChordDataFallbackBanner } from './ChordDataFallbackBanner'
 import {
   getChordDisplayName,
   getChordShapesFromLibrary,
@@ -15,21 +19,17 @@ export function ChordFinderSection() {
   const [root, setRoot] = useState<RootName>('C')
   const [quality, setQuality] = useState<ChordQuality>('major')
   const [library, setLibrary] = useState<ChordLibrary | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [libraryLoadInfo, setLibraryLoadInfo] =
+    useState<ChordLibraryLoadInfo | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
     fetchChordLibrary()
-      .then((lib) => {
-        if (!cancelled) setLibrary(lib)
-      })
-      .catch((e: unknown) => {
+      .then(({ library: lib, loadInfo }) => {
         if (!cancelled) {
-          setLoadError(
-            e instanceof Error ? e.message : '데이터를 불러오지 못했습니다.',
-          )
-          setLibrary(null)
+          setLibrary(lib)
+          setLibraryLoadInfo(loadInfo)
         }
       })
       .finally(() => {
@@ -58,11 +58,8 @@ export function ChordFinderSection() {
         </p>
       </div>
 
-      {loadError ? (
-        <p className="chord-finder__load-error" role="alert">
-          {loadError} API 서버가 실행 중인지 확인해 주세요. (
-          <code>npm run dev</code>)
-        </p>
+      {!loading && library && libraryLoadInfo?.source === 'fallback' ? (
+        <ChordDataFallbackBanner info={libraryLoadInfo} />
       ) : null}
       {loading ? (
         <p className="chord-finder__load-hint" aria-live="polite">

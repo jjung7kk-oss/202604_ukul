@@ -1,9 +1,16 @@
-import { NavLink, Outlet, Route, Routes } from 'react-router-dom'
+import { NavLink, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { ChordEditPage } from './components/ChordEditPage'
 import { ChordFinderSection } from './components/ChordFinderSection'
+import { TransposePage } from './components/TransposePage'
 import './App.css'
 
 function AppLayout() {
+  const { pathname } = useLocation()
+  const finderNavActive =
+    pathname === '/' || pathname === '/finder'
+  const editNavActive =
+    pathname === '/edit' || pathname === '/admin/chords'
+
   return (
     <div className="app-shell">
       <header className="app-header" role="banner">
@@ -17,23 +24,39 @@ function AppLayout() {
             />
           </NavLink>
           <nav className="app-nav" aria-label="주요 메뉴">
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                `app-nav__link${isActive ? ' app-nav__link--active' : ''}`
-              }
-              end
-            >
-              코드찾기
-            </NavLink>
-            <NavLink
-              to="/edit"
-              className={({ isActive }) =>
-                `app-nav__link${isActive ? ' app-nav__link--active' : ''}`
-              }
-            >
-              코드수정
-            </NavLink>
+            <ul className="app-nav__list">
+              <li className="app-nav__item">
+                <NavLink
+                  to="/"
+                  className={() =>
+                    `app-nav__link${finderNavActive ? ' app-nav__link--active' : ''}`
+                  }
+                  end
+                >
+                  코드찾기
+                </NavLink>
+              </li>
+              <li className="app-nav__item">
+                <NavLink
+                  to="/edit"
+                  className={() =>
+                    `app-nav__link${editNavActive ? ' app-nav__link--active' : ''}`
+                  }
+                >
+                  코드수정
+                </NavLink>
+              </li>
+              <li className="app-nav__item">
+                <NavLink
+                  to="/transpose"
+                  className={({ isActive }) =>
+                    `app-nav__link${isActive ? ' app-nav__link--active' : ''}`
+                  }
+                >
+                  조변환
+                </NavLink>
+              </li>
+            </ul>
           </nav>
         </div>
       </header>
@@ -51,6 +74,8 @@ function App() {
         <Route index element={<ChordFinderSection />} />
         <Route path="finder" element={<ChordFinderSection />} />
         <Route path="edit" element={<ChordEditPage />} />
+        <Route path="admin/chords" element={<ChordEditPage />} />
+        <Route path="transpose" element={<TransposePage />} />
       </Route>
     </Routes>
   )
