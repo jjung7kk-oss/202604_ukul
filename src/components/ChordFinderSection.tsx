@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   fetchChordLibrary,
   type ChordLibraryLoadInfo,
 } from '../api/chordsApi'
 import { ChordDataFallbackBanner } from './ChordDataFallbackBanner'
 import {
-  getChordDisplayName,
+  getChordReadingLabel,
   getChordShapesFromLibrary,
   QUALITY_ORDER,
   ROOT_ORDER,
@@ -45,7 +46,7 @@ export function ChordFinderSection() {
     [library, root, quality],
   )
 
-  const chordTitle = getChordDisplayName(root, quality)
+  const readingLabel = getChordReadingLabel(root, quality)
 
   return (
     <section className="chord-finder" aria-labelledby="chord-finder-title">
@@ -58,45 +59,67 @@ export function ChordFinderSection() {
         </p>
       </div>
 
-      {loading ? (
-        <p className="chord-finder__load-hint" aria-live="polite">
-          코드 데이터를 불러오는 중…
-        </p>
-      ) : null}
-
       <div className="chord-finder__workspace">
-        <div className="chord-finder__panel chord-finder__panel--selection">
-          <div className="section-card">
-            <h2 className="chord-finder__heading">루트음</h2>
-            <RootTabs roots={ROOT_ORDER} selected={root} onSelect={setRoot} />
-          </div>
+        {loading ? (
+          <p className="chord-finder__load-hint" aria-live="polite">
+            코드 데이터를 불러오는 중…
+          </p>
+        ) : (
+          <div className="chord-finder__body">
+            <div className="chord-finder__pick-shell">
+              <div className="chord-finder__rail chord-finder__rail--root">
+                <h2 className="chord-finder__rail-heading">루트음</h2>
+                <RootTabs
+                  layout="vertical"
+                  roots={ROOT_ORDER}
+                  selected={root}
+                  onSelect={setRoot}
+                />
+              </div>
+              <div className="chord-finder__rail chord-finder__rail--qual">
+                <h2 className="chord-finder__rail-heading">코드 타입</h2>
+                <QualityTabs
+                  layout="vertical"
+                  items={QUALITY_ORDER}
+                  selected={quality}
+                  onSelect={setQuality}
+                />
+              </div>
+            </div>
 
-          <div className="section-card">
-            <h2 className="chord-finder__heading">코드 타입</h2>
-            <QualityTabs
-              items={QUALITY_ORDER}
-              selected={quality}
-              onSelect={setQuality}
-            />
+            <div className="chord-finder__rail chord-finder__rail--out">
+              <div
+                className="chord-finder__current"
+                aria-live="polite"
+                aria-label={`선택한 코드 ${readingLabel}`}
+              >
+                <span className="chord-finder__current-name">{readingLabel}</span>
+              </div>
+              <div className="section-card section-card--flush chord-finder__fingerings-card">
+                <h2 className="chord-finder__heading chord-finder__fingerings-heading">
+                  운지방법
+                </h2>
+                <ChordShapeGrid shapes={shapes} />
+              </div>
+            </div>
           </div>
-
-          <div className="chord-finder__selected" aria-live="polite">
-            <span className="chord-finder__selected-label">선택된 코드</span>
-            <span className="chord-finder__selected-name">{chordTitle}</span>
-          </div>
-        </div>
-
-        <div className="chord-finder__panel chord-finder__panel--results">
-          <div className="section-card section-card--flush">
-            <h2 className="chord-finder__heading">운지방법</h2>
-            <ChordShapeGrid shapes={shapes} />
-          </div>
-        </div>
+        )}
       </div>
 
-      {!loading && library && libraryLoadInfo?.source === 'fallback' ? (
-        <ChordDataFallbackBanner info={libraryLoadInfo} />
-      ) : null}
+      <div className="chord-finder__tail">
+        {!loading &&
+        library &&
+        libraryLoadInfo?.source === 'fallback' ? (
+          <div className="chord-finder__fallback-slot">
+            <ChordDataFallbackBanner info={libraryLoadInfo} />
+          </div>
+        ) : null}
+        <footer className="chord-finder__footer-login">
+          <Link to="/admin/login" className="chord-finder__login-link">
+            로그인
+          </Link>
+        </footer>
+      </div>
     </section>
   )
 }

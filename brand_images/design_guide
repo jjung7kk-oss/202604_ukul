@@ -73,6 +73,101 @@ To increase usable content above the fold, reduce vertical density of intro and 
   - `코드 타입`
   - `운지방법`
 
+---
+
+## 2026-04 Shared layout density (three menus)
+
+Applied consistently to **코드찾기**, **코드수정**, **조변환** via shared classes in `App.css` (`chord-finder__hero`, `section-card`, `chord-finder__heading`, `chord-finder__workspace`, etc.).
+
+### Principles (must follow)
+
+1. **소개 영역보다 실제 조작 UI를 우선 배치** — Intro/hero stays short; selection and results move up.
+2. **상단 카드/타이틀/설명/섹션 제목은 과하게 크지 않게 유지** — Hero title ~18px desktop / ~16px compact; description ~12px; section headings ~14px.
+3. **카드 상하 패딩과 섹션 간격은 전체 화면 밀도를 해치지 않는 수준으로 조정** — `section-card` padding ~8–10px; workspace gap ~8px; panel column gaps tightened.
+4. **세 메뉴 전체에 공통으로 적용되는 기본 레이아웃 밀도를 일관되게 유지** — Same tokens for all three routes; per-menu layout tweaks are a separate step.
+
+### Responsive (common)
+
+- Page flow stays **vertical stack** on mobile/tablet/desktop.
+- **No horizontal page scroll**: `.app-shell { overflow-x: hidden }`, main column `min-width: 0`; wide tables may scroll inside their own wrapper only.
+- **Chord finder** has dedicated mobile flow (see **Chord finder screen — mobile flow**); other menus may follow separately.
+
+### Implementation snapshot (reference)
+
+| Element | Approx. desktop / compact |
+|--------|---------------------------|
+| Hero padding | ~8px 12px / compact ~7px 11px |
+| Hero title | ~18px / compact ~16px |
+| Hero description | ~12px (caption-ish) |
+| Title–description gap | ~3px |
+| Section heading (`.chord-finder__heading`) | ~14px |
+| Section card padding | ~8–10px; internal gap ~6px |
+| Workspace grid gap (wide) | ~12px |
+
+### Radius scale (2026-04, tool-like)
+
+Cards are **less round** than before; chips/tabs stay **fully rounded** for affordance.
+
+| Token | Value | Typical use |
+|--------|--------|-------------|
+| `--radius-lg` | **12px** | Hero / top intro card (`.chord-finder__hero`) |
+| `--radius-md` | **10px** | Section cards, result cards, selected summary, banners |
+| `--radius-sm` | **8px** | Inputs, compact actions, nested items |
+| `--radius-pill` | **999px** | Tab chips, pill toggles (rounder than cards) |
+
+### Chord finder screen — structure & mobile (2026-04)
+
+**Vertical order (DOM, top → bottom)** — must stay stable; **hero / title is always first**; nothing (e.g. fallback messages) may appear above the title.
+
+1. **Title + description** (`.chord-finder__hero`)
+2. **Chord finding** (`.chord-finder__workspace`): loading hint *or* main body
+3. **Tail** (`.chord-finder__tail`): optional API/fallback notice, then **로그인** link (last)
+
+**Mobile cognitive flow (루트음 | 코드 타입 | 운지)**
+
+- **No page-level horizontal scroll.**
+- Use a **3-column CSS grid** roughly **30% | 30% | 40%** (`0.3fr 0.3fr 0.4fr`): column 1 = 루트음 (vertical scroll list of tabs), column 2 = 코드 타입 (vertical tabs), column 3 = **선택 코드 이름만** (no “현재 코드” label) + **운지방법** (diagrams). Vertical tab lists use a **taller** `max-height` (e.g. ~`min(65vh, 520px)`) so more options show before scroll on typical phones.
+- Implement with `display: contents` on `.chord-finder__pick-shell` so two rails + out column are **three grid items** on small screens.
+- **`getChordReadingLabel`**: spaced label (e.g. `C sus4`).
+
+**Tablet / desktop (≥768px)**
+
+- **Two columns**: left = one card (`.chord-finder__pick-shell`) with 루트음 stacked above 코드 타입 (divider); horizontal tab strips restored via CSS on `.tab-strip--vertical` inside the shell.
+- Right column: **선택 코드 텍스트** + 운지방법 card, left-aligned; chord name only (no extra label).
+
+**Copy (fixed)**
+
+- Title: `우쿨렐레 코드 찾기`
+- Description: `루트와 코드 타입을 고르면 운지를 바로 확인할 수 있어요.`
+- Labels: `루트음`, `코드 타입`, `운지방법` (never “Shape 목록”).
+
+### Chord edit screen — structure & flow (2026-04)
+
+**Goal:** Same **product tone** as chord finder (hero, card radius, tab density, 3-column mobile picker) while optimizing the **select → confirm → edit → apply** admin flow.
+
+**Vertical order (DOM, top → bottom)**
+
+1. **Title + description** (`.chord-finder__hero.chord-finder__hero--compact`): title `코드 수정`, description `코드 모양을 직접 바꾸고 저장할 수 있어요.` — short, not taller than finder hero.
+2. **Workspace** (`.chord-finder__workspace.chord-edit__workspace`): same **`.chord-finder__body`** grid as finder — **루트음 (표준)** | **코드 타입** | **수정 열** (current chord name + 운지방법 card).
+3. **Footer** (`.chord-edit__admin-foot`): 로그아웃 / 로그인 link — compact margin.
+
+**Mobile**
+
+- **No page-level horizontal scroll** (`.chord-edit { overflow-x: hidden; min-width: 0 }`).
+- **3-column** picker matches finder (~30% / ~30% / ~40%); vertical tab strips with same `max-height` behavior as finder.
+- **Current chord** in third column: **name only** (use `getChordReadingLabel`, same style as finder `.chord-finder__current`), `aria-label` like “수정 중인 코드 …”.
+- **운지방법** card: status lines (loading / errors / empty) in a **compact** block (`.chord-edit__status`), then list rows labeled **운지방법 1…n** (never “Shape”). Primary action **`적용 / 저장`**; secondary **`운지방법 추가`**.
+
+**Tablet / desktop (≥768px)**
+
+- Same **two-column** split as finder: left shell = 루트 + 타입 (tabs become horizontal wrap); right = current name + 운지방법 editor.
+
+**Copy (fixed)**
+
+- Title: `코드 수정`
+- Description: `코드 모양을 직접 바꾸고 저장할 수 있어요.`
+- Never use “Shape 목록” / “shape 추가”; use **운지방법** wording throughout.
+
 ## 1-2. Typography Principles
 
 * Readability comes first
@@ -232,15 +327,15 @@ Use the selected bright sky blue direction.
 
 * Max width: **1120px**
 * Horizontal padding: **24px**
-* Vertical padding: **24px 24px 32px**
+* Vertical padding: **~20px 24px 24px** (shared compact pass)
 
 ### Tablet
 
-* Padding: **20px**
+* Padding: **~16px 20px 20px** (slightly tighter vertical than earlier spec)
 
 ### Mobile
 
-* Padding: **16px**
+* Padding: **~12px 16px 16px**
 
 ---
 
@@ -303,23 +398,22 @@ Short intro block at the top of the page.
 * Short description
 * Optional CTA or direct selection entry
 
-### Style
+### Style (2026-04 shared compact layout)
 
-* Padding: **20px**
-* Border radius: **20px**
-* Internal gap: **10px**
-* Background: soft blue / light background
-* Title: **Display** or **Heading 1**
-* Description: **Body 1**
+* Padding: **~8px 12px** (compact pages **~7px 11px**)
+* Border radius: **12px** (`--radius-lg`) — slightly rounder than section cards only
+* Internal gap between title and description: **~3px**
+* Background: soft blue / light gradient
+* Title: **~18px / 700** (subpages with `hero--compact`: **~16px / 700**)
+* Description: **~12px / 400** (one step below previous body intro)
 
 ### Mobile
 
-* Padding: **16px**
-* Use Heading 1 instead of Display if vertical space is tight
+* Slightly smaller title/description; hero padding **~7px 10px**
 
 ### Rule
 
-Keep intro text short. Ideally 2 to 3 lines maximum.
+Keep intro text short. Ideally 2 to 3 lines maximum. Prefer **smaller type + less padding** over large hero blocks.
 
 ---
 
@@ -329,19 +423,19 @@ Keep intro text short. Ideally 2 to 3 lines maximum.
 
 Default white content container.
 
-### Style
+### Style (2026-04 shared compact layout)
 
 * Background: `#FFFFFF`
 * Border: `1px solid #E5ECF3`
-* Border radius: **16px**
-* Padding: **16px**
-* Internal gap: **12px**
+* Border radius: **10px** (`--radius-md`)
+* Padding: **~8px 10px**
+* Internal gap (title to content): **~6px**
 * Shadow: none or very subtle only
 
 ### Mobile
 
-* Padding: **14px**
-* Radius: **14px**
+* Padding: **~7px 8px**
+* Same radius as desktop (token-driven)
 
 ---
 
@@ -470,8 +564,8 @@ Display one chord fingering result.
 
 ### Style
 
-* Padding: **14px**
-* Border radius: **16px**
+* Padding: **14px** (or compact **~10px** when aligned with `.chord-card` in app)
+* Border radius: **10px** (`--radius-md`), same family as section cards
 * Border: `1px solid #E5ECF3`
 * Internal gap: **10px**
 * Background: `#FFFFFF`
@@ -504,15 +598,22 @@ Display one chord fingering result.
 
 Primary visual content inside a result card.
 
+### Style (2026-04 horizontal diagram)
+
+* **Proportions**: **Wider than tall** (~**1.5 : 1** viewBox). Each fret cell is a **horizontal** rectangle (cell width > string spacing). Not too tall vertically.
+* **Open strings (fret 0)**: Do **not** draw extra marks in the “zero” zone left of the nut — keeps the chart clean; aria-label still carries full fret numbers.
+* **String labels (A, E, C, G)**: **Small** (~8px), **muted** grey (`#94a3b8` range), secondary to the grid and dots.
+* **Grid**: Nut line slightly stronger than inner fret lines; inner lines softer grey for hierarchy.
+* **Fingering dots**: Primary blue circles, **r ~6** in viewBox units (slightly prominent vs grid).
+
 ### Recommended Size
 
-* Desktop: **120px ~ 140px square**
-* Tablet: **110px ~ 130px square**
-* Mobile: **96px ~ 120px square**
+* Container: **max-width ~228px**, **aspect-ratio `3 / 2`**, centered in the card.
+* **Transpose** table column: diagram **max-width ~228px** (no forced min-width that stretches the row).
 
 ### Rule
 
-This area should visually dominate the card more than supporting text.
+This area should visually dominate the card more than supporting text, without stretching horizontally across the full card width.
 
 ---
 
@@ -650,9 +751,9 @@ This is a utility tool. Clarity and tap success matter more than ornamental desi
   --color-border: #E5ECF3;
   --color-disabled: #B7C2CF;
 
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
   --radius-pill: 999px;
 
   --space-1: 4px;
@@ -698,6 +799,6 @@ When generating the UI:
 * preserve strong spacing consistency
 * keep the overall tone friendly, simple, and practical
 * avoid overly playful or decorative UI patterns
+* follow the **2026-04 Shared layout density (three menus)** section for 코드찾기 / 코드수정 / 조변환 so all three menus share the same hero, card, and heading density
+* use the **Radius scale (2026-04, tool-like)** hierarchy: hero `lg`, cards `md`, inputs/small UI `sm`, chips `pill`
 
-```
-```

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { fetchChordDetail, saveChordDetail } from '../api/chordsApi'
+import { useAdminAuth } from '../hooks/useAdminAuth'
 import {
   CANONICAL_ROOTS,
-  getChordDisplayName,
+  getChordReadingLabel,
   QUALITY_ORDER,
 } from '../data/chordData'
 import type { CanonicalRootName, ChordQuality, RootName } from '../types/chord'
@@ -13,6 +15,7 @@ import { RootTabs } from './RootTabs'
 const ROOTS_FOR_TABS = [...CANONICAL_ROOTS] as readonly RootName[]
 
 export function ChordEditPage() {
+  const { token, isAuthenticated, logout } = useAdminAuth()
   const [root, setRoot] = useState<CanonicalRootName>('C')
   const [quality, setQuality] = useState<ChordQuality>('major')
   const [inputs, setInputs] = useState<string[]>([])
@@ -23,11 +26,14 @@ export function ChordEditPage() {
   const [saveOk, setSaveOk] = useState(false)
 
   const load = useCallback(async () => {
+    if (!token) return
     setLoading(true)
     setLoadError(null)
     setSaveOk(false)
     try {
-      const { shapes } = await fetchChordDetail(root, quality)
+      const { shapes } = await fetchChordDetail(root, quality, {
+        authToken: token,
+      })
       setInputs(
         shapes.length > 0
           ? shapes.map((s) => s.frets.join(','))
@@ -40,13 +46,13 @@ export function ChordEditPage() {
     } finally {
       setLoading(false)
     }
-  }, [root, quality])
+  }, [root, quality, token])
 
   useEffect(() => {
     void load()
   }, [load])
 
-  const chordTitle = getChordDisplayName(root as RootName, quality)
+  const readingLabel = getChordReadingLabel(root as RootName, quality)
 
   const updateLine = (index: number, value: string) => {
     setInputs((prev) => {
@@ -108,7 +114,8 @@ export function ChordEditPage() {
     }
 
     try {
-      await saveChordDetail(root, quality, fretsList)
+      if (!token) return
+      await saveChordDetail(root, quality, fretsList, token)
       setSaveOk(true)
       await load()
     } catch (e) {
@@ -117,8 +124,8 @@ export function ChordEditPage() {
   }
 
   return (
-    <section className="chord-edit" aria-labelledby="chord-edit-title">
-      <div className="chord-finder__hero chord-finder__hero--compact">
+    <section className="chord-edit chord-finder" aria-labelledby="chord-edit-title">
+      <div className="chord-finder__hero chord-finder__hero--compact chord-edit__hero">
         <h1 id="chord-edit-title" className="chord-finder__hero-title">
           코드 수정
         </h1>
@@ -127,67 +134,78 @@ export function ChordEditPage() {
         </p>
       </div>
 
-      <div className="chord-finder__workspace">
-        <div className="chord-finder__panel chord-finder__panel--selection">
-          <div className="section-card">
-            <h2 className="chord-finder__heading">루트음 (표준)</h2>
-            <RootTabs
-              roots={ROOTS_FOR_TABS}
-              selected={root}
-              onSelect={(r) => setRoot(r as CanonicalRootName)}
-            />
+      <div className="chord-finder__workspace chord-edit__workspace">
+        <div className="chord-finder__body">
+          <div className="chord-finder__pick-shell">
+            <div className="chord-finder__rail chord-finder__rail--root">
+              <h2 className="chord-finder__rail-heading">
+                루트음{' '}
+                <span className="chord-edit__rail-sub">(표준)</span>
+              </h2>
+              <RootTabs
+                layout="vertical"
+                roots={ROOTS_FOR_TABS}
+                selected={root}
+                onSelect={(r) => setRoot(r as CanonicalRootName)}
+              />
+            </div>
+            <div className="chord-finder__rail chord-finder__rail--qual">
+              <h2 className="chord-finder__rail-heading">코드 타입</h2>
+              <QualityTabs
+                layout="vertical"
+                items={QUALITY_ORDER}
+                selected={quality}
+                onSelect={setQuality}
+              />
+            </div>
           </div>
 
-          <div className="section-card">
-            <h2 className="chord-finder__heading">코드 타입</h2>
-            <QualityTabs
-              items={QUALITY_ORDER}
-              selected={quality}
-              onSelect={setQuality}
-            />
-          </div>
+          <div className="chord-finder__rail chord-finder__rail--out">
+            <div
+              className="chord-finder__current"
+              aria-live="polite"
+              aria-label={`수정 중인 코드 ${readingLabel}`}
+            >
+              <span className="chord-finder__current-name">{readingLabel}</span>
+            </div>
 
-          <div className="chord-finder__selected" aria-live="polite">
-            <span className="chord-finder__selected-label">선택된 코드</span>
-            <span className="chord-finder__selected-name">{chordTitle}</span>
-          </div>
-        </div>
+            <div className="section-card section-card--flush chord-finder__fingerings-card chord-edit__fingerings">
+              <h2 className="chord-finder__heading chord-finder__fingerings-heading">
+                운지방법
+              </h2>
 
-        <div className="chord-finder__panel chord-finder__panel--results">
-          <div className="section-card section-card--flush">
-            <h2 className="chord-finder__heading">Shape 목록</h2>
+              <div className="chord-edit__status" aria-live="polite">
+                {loading ? (
+                  <p className="chord-edit__hint">불러오는 중…</p>
+                ) : null}
+                {loadError ? (
+                  <p className="chord-edit__error" role="alert">
+                    {loadError}
+                  </p>
+                ) : null}
+                {saveError ? (
+                  <p className="chord-edit__error" role="alert">
+                    {saveError}
+                  </p>
+                ) : null}
+                {saveOk ? (
+                  <p className="chord-edit__ok" role="status">
+                    저장했습니다.
+                  </p>
+                ) : null}
+                {!loading && !loadError && inputs.length === 0 ? (
+                  <p className="chord-edit__hint">
+                    등록된 운지방법이 없습니다. 아래에서 추가해 주세요.
+                  </p>
+                ) : null}
+              </div>
 
-            {loading ? (
-              <p className="chord-edit__hint">불러오는 중…</p>
-            ) : null}
-            {loadError ? (
-              <p className="chord-edit__error" role="alert">
-                {loadError}
-              </p>
-            ) : null}
-            {saveError ? (
-              <p className="chord-edit__error" role="alert">
-                {saveError}
-              </p>
-            ) : null}
-            {saveOk ? (
-              <p className="chord-edit__ok" role="status">
-                저장했습니다.
-              </p>
-            ) : null}
-
-            {!loading && !loadError && inputs.length === 0 ? (
-              <p className="chord-edit__hint">
-                등록된 shape가 없습니다. 아래에서 추가해 주세요.
-              </p>
-            ) : null}
-
-            <ul className="chord-edit__list">
+              <ul className="chord-edit__list">
               {inputs.map((line, index) => (
                 <li key={index} className="chord-edit__card">
                   <div className="chord-edit__card-head">
                     <span className="chord-edit__card-label">
-                      Shape {index + 1}
+                      운지방법 {index + 1}
                     </span>
                     <div className="chord-edit__card-actions">
                       <button
@@ -237,29 +255,46 @@ export function ChordEditPage() {
                   ) : null}
                 </li>
               ))}
-            </ul>
+              </ul>
 
-            <div className="chord-edit__footer">
-              <button
-                type="button"
-                className="chord-edit__btn chord-edit__btn--secondary"
-                onClick={addShape}
-                disabled={inputs.length >= 4}
-              >
-                shape 추가
-              </button>
-              <button
-                type="button"
-                className="chord-edit__btn chord-edit__btn--primary"
-                onClick={() => void apply()}
-                disabled={loading}
-              >
-                적용
-              </button>
+              <div className="chord-edit__footer">
+                <button
+                  type="button"
+                  className="chord-edit__btn chord-edit__btn--secondary"
+                  onClick={addShape}
+                  disabled={inputs.length >= 4}
+                >
+                  운지방법 추가
+                </button>
+                <button
+                  type="button"
+                  className="chord-edit__btn chord-edit__btn--primary"
+                  onClick={() => void apply()}
+                  disabled={loading}
+                >
+                  적용 / 저장
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <footer className="chord-edit__admin-foot">
+        {isAuthenticated ? (
+          <button
+            type="button"
+            className="chord-edit__admin-login-link"
+            onClick={() => logout()}
+          >
+            로그아웃
+          </button>
+        ) : (
+          <Link to="/admin/login" className="chord-edit__admin-login-link">
+            로그인
+          </Link>
+        )}
+      </footer>
     </section>
   )
 }

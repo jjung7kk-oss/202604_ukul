@@ -14,9 +14,10 @@
   --color-border: #e5ecf3;
   --color-disabled: #b7c2cf;
 
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
+  /* 카드: 단정한 툴 UI — 칩/필은 --radius-pill로 더 둥글게 */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
   --radius-pill: 999px;
 
   --space-1: 4px;

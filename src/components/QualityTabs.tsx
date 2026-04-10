@@ -4,6 +4,7 @@ type Props = {
   items: { key: ChordQuality; label: string }[]
   selected: ChordQuality
   onSelect: (q: ChordQuality) => void
+  layout?: 'horizontal' | 'vertical'
 }
 
 const QUALITY_TAB_TEXT: Record<ChordQuality, string> = {
@@ -22,9 +23,19 @@ const QUALITY_TAB_TEXT: Record<ChordQuality, string> = {
   '9': '9',
 }
 
-export function QualityTabs({ items, selected, onSelect }: Props) {
+export function QualityTabs({
+  items,
+  selected,
+  onSelect,
+  layout = 'horizontal',
+}: Props) {
+  const stripClass =
+    layout === 'vertical'
+      ? 'tab-strip tab-strip--vertical'
+      : 'tab-strip tab-strip--wrap'
+
   return (
-    <div className="tab-strip tab-strip--wrap" role="tablist" aria-label="코드 타입">
+    <div className={stripClass} role="tablist" aria-label="코드 타입">
       {items.map(({ key, label }) => {
         const isActive = key === selected
         const tabText = label || QUALITY_TAB_TEXT[key]

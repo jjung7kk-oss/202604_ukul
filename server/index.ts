@@ -2,6 +2,12 @@ import 'dotenv/config'
 import cors from 'cors'
 import express from 'express'
 import {
+  getBearerToken,
+  signSessionToken,
+  verifyCredentials,
+  verifySessionToken,
+} from '../lib/adminAuth'
+import {
   getChordDetail,
   getChordLibrary,
   replaceChordShapes,
@@ -10,11 +16,44 @@ import {
 const app = express()
 const PORT = Number(process.env.PORT) || 4000
 
-app.use(cors())
+app.use(
+  cors({
+    origin: '*',
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  }),
+)
 app.use(express.json())
+
+function requireAdminAuth(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction,
+): void {
+  const token = getBearerToken(req.headers.authorization)
+  if (!verifySessionToken(token)) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+  next()
+}
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true })
+})
+
+app.post('/api/auth/login', (req, res) => {
+  const body = req.body as { username?: string; password?: string }
+  const username = body.username
+  const password = body.password
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    res.status(400).json({ error: 'username and password required' })
+    return
+  }
+  if (!verifyCredentials(username, password)) {
+    res.status(401).json({ error: 'Invalid credentials' })
+    return
+  }
+  res.json({ token: signSessionToken() })
 })
 
 app.get('/api/chords/library', async (_req, res) => {
@@ -27,7 +66,7 @@ app.get('/api/chords/library', async (_req, res) => {
   }
 })
 
-app.get('/api/chords/detail', async (req, res) => {
+app.get('/api/chords/detail', requireAdminAuth, async (req, res) => {
   const root = String(req.query.root ?? '')
   const type = String(req.query.type ?? '')
   if (!root || !type) {
@@ -43,7 +82,7 @@ app.get('/api/chords/detail', async (req, res) => {
   }
 })
 
-app.put('/api/chords/detail', async (req, res) => {
+app.put('/api/chords/detail', requireAdminAuth, async (req, res) => {
   const body = req.body as {
     root?: string
     type?: string

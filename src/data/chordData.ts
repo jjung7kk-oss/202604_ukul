@@ -278,6 +278,12 @@ export function getChordDisplayName(root: RootName, quality: ChordQuality): stri
   return quality === 'major' ? root : `${root}${quality}`
 }
 
+/** 코드찾기 등: 루트와 타입을 띄어 읽기 (예: `C sus4`) */
+export function getChordReadingLabel(root: RootName, quality: ChordQuality): string {
+  if (quality === 'major') return root
+  return `${root} ${quality}`
+}
+
 export function getCanonicalRoot(root: RootName): CanonicalRootName {
   return ROOT_ALIAS[root]
 }
