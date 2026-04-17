@@ -868,7 +868,7 @@ button.chord-edit__admin-login-link {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
   min-width: 0;
 }
 
@@ -884,9 +884,60 @@ button.chord-edit__admin-login-link {
   gap: var(--space-2);
 }
 
+.transpose-page__compare-card {
+  gap: var(--space-2);
+}
+
+.transpose-page__compare-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.transpose-page__compare-summary {
+  margin: 0;
+  font: var(--font-label-2);
+  color: var(--color-text-sub);
+}
+
+.transpose-page__key-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.transpose-page__key-panel {
+  min-width: 0;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-page);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.transpose-page__panel-title {
+  margin: 0;
+  font: var(--font-label-1);
+  color: var(--color-text-main);
+}
+
+.transpose-page__list-card {
+  gap: var(--space-2);
+}
+
 .transpose-page__builder {
   display: flex;
   flex-direction: column;
+  gap: var(--space-2);
+}
+
+.transpose-page__builder-selects {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-2);
 }
 
@@ -894,6 +945,13 @@ button.chord-edit__admin-login-link {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  min-width: 0;
+}
+
+.transpose-page__select-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .transpose-page__builder-label {
@@ -901,25 +959,58 @@ button.chord-edit__admin-login-link {
   color: var(--color-text-sub);
 }
 
+.transpose-page__select {
+  height: 40px;
+  width: clamp(88px, 30vw, 132px);
+  min-width: 0;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  color: var(--color-text-main);
+  font: var(--font-body-2);
+}
+
+.transpose-page__select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(47, 128, 237, 0.2);
+}
+
 .transpose-page__builder-actions {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-2);
   flex-wrap: wrap;
 }
 
 .transpose-page__builder-picked {
+  margin: 0;
   font: var(--font-body-2);
   color: var(--color-text-main);
+}
+
+.transpose-page__custom-flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.transpose-page__custom-block {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-page);
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .transpose-page__picked-list {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--color-border);
   gap: var(--space-2);
 }
 
@@ -987,4 +1078,10 @@ button.chord-edit__admin-login-link {
 .transpose-page__no-shape {
   font: var(--font-body-2);
   color: var(--color-text-sub);
+}
+
+@media (max-width: 767px) {
+  .transpose-page__builder-actions .tab-strip__btn {
+    width: 100%;
+  }
 }

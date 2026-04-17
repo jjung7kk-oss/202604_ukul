@@ -76,6 +76,12 @@ export function TransposePage() {
   }, [library, semitoneSteps, sourceSymbols])
 
   const showResults = sourceSymbols.length > 0
+  const semitoneLabel =
+    semitoneSteps === 0
+      ? '0'
+      : semitoneSteps <= 6
+        ? `+${semitoneSteps}`
+        : `−${12 - semitoneSteps}`
 
   const candidateSymbol = useMemo(
     () => formatChordSymbol({ root: customRoot, quality: customQuality }),
@@ -109,54 +115,57 @@ export function TransposePage() {
       ) : null}
 
       <div className="transpose-page__controls">
-        <div className="section-card">
-          <h2 className="chord-finder__heading">원곡 키</h2>
-          <p className="transpose-page__hint">
-            키는 샵 표기만 사용해요 (
-            {CANONICAL_ROOTS.join(', ')}).
-          </p>
-          <div className="tab-strip tab-strip--wrap" role="group" aria-label="원곡 키">
-            {CANONICAL_ROOTS.map((k) => (
-              <button
-                key={k}
-                type="button"
-                className={`tab-strip__btn${fromKey === k ? ' tab-strip__btn--active' : ''}`}
-                onClick={() => setFromKey(k)}
-              >
-                {k}
-              </button>
-            ))}
+        <div className="section-card transpose-page__compare-card">
+          <div className="transpose-page__compare-head">
+            <h2 className="chord-finder__heading">원곡 키 | 목표 키</h2>
+            <p className="transpose-page__compare-summary" aria-live="polite">
+              <strong>{fromKey}</strong> → <strong>{toKey}</strong> ({semitoneLabel})
+            </p>
           </div>
+          <div className="transpose-page__key-grid">
+            <div className="transpose-page__key-panel">
+              <h3 className="transpose-page__panel-title">원곡 키</h3>
+              <label className="transpose-page__select-label">
+                <span className="transpose-page__builder-label">원곡 키 선택</span>
+                <select
+                  className="transpose-page__select"
+                  value={fromKey}
+                  onChange={(event) => setFromKey(event.target.value as CanonicalRootName)}
+                  aria-label="원곡 키"
+                >
+                  {CANONICAL_ROOTS.map((k) => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="transpose-page__key-panel">
+              <h3 className="transpose-page__panel-title">목표 키</h3>
+              <label className="transpose-page__select-label">
+                <span className="transpose-page__builder-label">목표 키 선택</span>
+                <select
+                  className="transpose-page__select"
+                  value={toKey}
+                  onChange={(event) => setToKey(event.target.value as CanonicalRootName)}
+                  aria-label="목표 키"
+                >
+                  {CANONICAL_ROOTS.map((k) => (
+                    <option key={k} value={k}>
+                      {k}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
+          <p className="transpose-page__hint">
+            키는 플랫 없이 샵 표기만 사용해요
+          </p>
         </div>
 
-        <div className="section-card">
-          <h2 className="chord-finder__heading">목표 키</h2>
-          <p className="transpose-page__hint">
-            원곡에서{' '}
-            <strong>
-              {semitoneSteps === 0
-                ? '0'
-                : semitoneSteps <= 6
-                  ? `+${semitoneSteps}`
-                  : `−${12 - semitoneSteps}`}
-            </strong>{' '}
-            칸 옮겨서 계산해요.
-          </p>
-          <div className="tab-strip tab-strip--wrap" role="group" aria-label="목표 키">
-            {CANONICAL_ROOTS.map((k) => (
-              <button
-                key={k}
-                type="button"
-                className={`tab-strip__btn${toKey === k ? ' tab-strip__btn--active' : ''}`}
-                onClick={() => setToKey(k)}
-              >
-                {k}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="section-card">
+        <div className="section-card transpose-page__list-card">
           <h2 className="chord-finder__heading">코드 목록</h2>
           <div
             className="transpose-page__mode"
@@ -184,77 +193,93 @@ export function TransposePage() {
           </div>
 
           {listMode === 'pick' ? (
-            <>
-              <p className="transpose-page__hint">
-                루트음과 코드 타입을 고른 뒤, 코드를 목록에 추가해 주세요.
-              </p>
-              <div className="transpose-page__builder">
-                <div className="transpose-page__builder-row">
-                  <span className="transpose-page__builder-label">루트음</span>
-                  <div className="tab-strip tab-strip--wrap">
-                    {CANONICAL_ROOTS.map((k) => (
-                      <button
-                        key={k}
-                        type="button"
-                        className={`tab-strip__btn${customRoot === k ? ' tab-strip__btn--active' : ''}`}
-                        onClick={() => setCustomRoot(k)}
-                      >
-                        {k}
-                      </button>
-                    ))}
+            <div className="transpose-page__custom-flow">
+              <div className="transpose-page__custom-block">
+                <h3 className="transpose-page__panel-title">코드 선택</h3>
+                <div className="transpose-page__builder">
+                  <div className="transpose-page__builder-selects">
+                    <div className="transpose-page__builder-row">
+                      <label className="transpose-page__select-label">
+                        <span className="transpose-page__builder-label">루트음</span>
+                        <select
+                          className="transpose-page__select"
+                          value={customRoot}
+                          onChange={(event) =>
+                            setCustomRoot(event.target.value as CanonicalRootName)
+                          }
+                          aria-label="루트음 선택"
+                        >
+                          {CANONICAL_ROOTS.map((k) => (
+                            <option key={k} value={k}>
+                              {k}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="transpose-page__builder-row">
+                      <label className="transpose-page__select-label">
+                        <span className="transpose-page__builder-label">코드 타입</span>
+                        <select
+                          className="transpose-page__select"
+                          value={customQuality}
+                          onChange={(event) =>
+                            setCustomQuality(event.target.value as ChordQuality)
+                          }
+                          aria-label="코드 타입 선택"
+                        >
+                          {QUALITY_ORDER.map((q) => (
+                            <option key={q.key} value={q.key}>
+                              {q.label || 'major'}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
                   </div>
-                </div>
-                <div className="transpose-page__builder-row">
-                  <span className="transpose-page__builder-label">코드 타입</span>
-                  <div className="tab-strip tab-strip--wrap">
-                    {QUALITY_ORDER.map((q) => (
-                      <button
-                        key={q.key}
-                        type="button"
-                        className={`tab-strip__btn${customQuality === q.key ? ' tab-strip__btn--active' : ''}`}
-                        onClick={() => setCustomQuality(q.key)}
-                      >
-                        {q.label || 'major'}
-                      </button>
-                    ))}
+                  <div className="transpose-page__builder-actions">
+                    <p className="transpose-page__builder-picked" aria-live="polite">
+                      현재 선택 코드 <strong>{candidateSymbol}</strong>
+                    </p>
+                    <button
+                      type="button"
+                      className="tab-strip__btn tab-strip__btn--active"
+                      onClick={addCustomSymbol}
+                      disabled={customSymbols.includes(candidateSymbol)}
+                    >
+                      이 코드를 목록에 추가
+                    </button>
                   </div>
-                </div>
-                <div className="transpose-page__builder-actions">
-                  <span className="transpose-page__builder-picked">
-                    선택 코드: <strong>{candidateSymbol}</strong>
-                  </span>
-                  <button
-                    type="button"
-                    className="tab-strip__btn tab-strip__btn--active"
-                    onClick={addCustomSymbol}
-                    disabled={customSymbols.includes(candidateSymbol)}
-                  >
-                    코드 추가
-                  </button>
                 </div>
               </div>
 
-              <div className="transpose-page__picked-list">
-                {customSymbols.length === 0 ? (
-                  <p className="transpose-page__hint">
-                    아직 추가된 코드가 없습니다.
-                  </p>
-                ) : (
-                  customSymbols.map((sym) => (
-                    <div key={sym} className="transpose-page__picked-item">
-                      <span className="transpose-page__cell-name">{sym}</span>
-                      <button
-                        type="button"
-                        className="chord-edit__btn chord-edit__btn--ghost"
-                        onClick={() => removeCustomSymbol(sym)}
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  ))
-                )}
+              <div className="transpose-page__custom-block">
+                <h3 className="transpose-page__panel-title">추가된 코드 목록</h3>
+                <div className="transpose-page__picked-list">
+                  {customSymbols.length === 0 ? (
+                    <p className="transpose-page__hint">
+                      아직 추가된 코드가 없습니다.
+                    </p>
+                  ) : (
+                    customSymbols.map((sym) => (
+                      <div key={sym} className="transpose-page__picked-item">
+                        <span className="transpose-page__cell-name">{sym}</span>
+                        <button
+                          type="button"
+                          className="chord-edit__btn chord-edit__btn--ghost"
+                          onClick={() => removeCustomSymbol(sym)}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <p className="transpose-page__hint">
+                  추가한 코드는 아래 변환 결과에 바로 반영돼요.
+                </p>
               </div>
-            </>
+            </div>
           ) : (
             <p className="transpose-page__hint">
               <strong>{fromKey}</strong> 키의 기본 7코드 전부를 변환합니다.
@@ -271,7 +296,12 @@ export function TransposePage() {
 
       {showResults ? (
         <div className="section-card transpose-page__results">
-          <h2 className="chord-finder__heading">결과</h2>
+          <div className="transpose-page__compare-head">
+            <h2 className="chord-finder__heading">변환 결과</h2>
+            <p className="transpose-page__compare-summary">
+              <strong>{fromKey}</strong> → <strong>{toKey}</strong>
+            </p>
+          </div>
           <div className="transpose-page__table-wrap">
             <table className="transpose-page__table">
               <thead>

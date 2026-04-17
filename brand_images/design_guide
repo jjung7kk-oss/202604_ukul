@@ -168,6 +168,50 @@ Cards are **less round** than before; chips/tabs stay **fully rounded** for affo
 - Description: `코드 모양을 직접 바꾸고 저장할 수 있어요.`
 - Never use “Shape 목록” / “shape 추가”; use **운지방법** wording throughout.
 
+### Transpose screen — comparison flow (2026-04)
+
+**Goal:** `조변환` is a **comparison-first** tool, not a long selection wizard. Users should quickly read **원곡 키 → 목표 키 → 결과**.
+
+**Control style difference (menu-specific)**
+
+- **코드찾기**: chip/tab-based selection is primary.
+- **조변환**: select-box-based comparison controls are primary (focus on selected values and result comparison).
+
+**Vertical order (DOM, top → bottom)**
+
+1. **Title + description** (`조변환`, `원래 코드를 원하는 키로 쉽게 바꿔볼 수 있어요.`) in a compact hero
+2. **Key comparison block**: `원곡 키 | 목표 키` grouped together (same section)
+3. **Chord list block**: `기본 코드 전체` / `직접 선택`
+4. **Result block**: `변경 전 / 변경 후 / 대표 운지` table
+
+**Key comparison block rules**
+
+1. Show **원곡 키** and **목표 키** as one paired area.
+2. On tablet/desktop, prefer side-by-side presentation.
+3. On mobile, vertical stacking is allowed but the two selectors must still feel like one grouped comparison unit.
+4. Keep key relation visible (e.g. `C → D`, semitone offset).
+5. Prefer **select boxes** over full chip expansion for key controls to keep layout compact on mobile.
+
+**Direct select flow rules (`직접 선택`)**
+
+Must read clearly as:
+`선택 → 추가 → 목록 → 결과`
+
+Recommended sub-blocks:
+
+1. **코드 선택**: 루트음 + 코드 타입 in one input flow
+   - Prefer **select boxes** for 루트음 and 코드 타입 in transpose flow.
+2. **현재 선택 코드 + 추가 버튼**: clearly indicates “add current code to list”
+3. **추가된 코드 목록**: visually distinct from in-progress selection; easy delete action
+4. **변환 결과 연결**: helper copy should make it obvious list updates are reflected in results below
+
+**Density and layout priorities**
+
+1. Prioritize actionable UI and result visibility over intro text.
+2. Keep spacing compact; avoid oversized cards and large vertical gaps.
+3. Keep visual tone aligned with 코드찾기/코드수정 shared system, while maintaining transpose-specific comparison structure.
+4. **No page-level horizontal scroll**.
+
 ## 1-2. Typography Principles
 
 * Readability comes first
