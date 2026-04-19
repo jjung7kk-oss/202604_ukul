@@ -1,4 +1,7 @@
+import type { Prisma } from '@prisma/client'
 import { prisma } from './db.js'
+
+const NOTATION_JSON_MAX_BYTES = 120_000
 
 export type ScoreVerseInput = {
   label: string
@@ -11,6 +14,8 @@ export type SaveScoreInput = {
   title: string
   sharedChordText: string
   verses: ScoreVerseInput[]
+  /** 악보 기호(JSON 객체). 생략 시 기존 악보는 필드 유지 */
+  notation?: unknown
 }
 
 export type StoredScore = {
@@ -18,6 +23,7 @@ export type StoredScore = {
   userId: string
   title: string
   sharedChordText: string
+  notation: Prisma.JsonValue
   createdAt: Date
   updatedAt: Date
   verses: { id: string; orderIndex: number; label: string; lyrics: string }[]
@@ -39,11 +45,37 @@ function normalizeVerses(verses: ScoreVerseInput[]): ScoreVerseInput[] {
   }))
 }
 
+function notationToDb(raw: unknown): Prisma.InputJsonValue {
+  if (raw == null) return {}
+  let value: unknown = raw
+  if (typeof raw === 'string') {
+    try {
+      value = JSON.parse(raw) as unknown
+    } catch {
+      throw new ScoreServiceError('BAD_REQUEST', '악보 기호(JSON) 형식이 올바르지 않습니다.')
+    }
+  }
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new ScoreServiceError('BAD_REQUEST', '악보 기호는 JSON 객체여야 합니다.')
+  }
+  let encoded: string
+  try {
+    encoded = JSON.stringify(value)
+  } catch {
+    throw new ScoreServiceError('BAD_REQUEST', '악보 기호를 직렬화할 수 없습니다.')
+  }
+  if (encoded.length > NOTATION_JSON_MAX_BYTES) {
+    throw new ScoreServiceError('BAD_REQUEST', '악보 기호 데이터가 너무 큽니다.')
+  }
+  return value as Prisma.InputJsonValue
+}
+
 function shapeScore(score: {
   id: string
   userId: string
   title: string
   sharedChordText: string
+  notation: Prisma.JsonValue
   createdAt: Date
   updatedAt: Date
   verses: { id: string; orderIndex: number; label: string; lyrics: string }[]
@@ -80,6 +112,9 @@ export async function saveScore(input: SaveScoreInput) {
   const sharedChordText =
     typeof input.sharedChordText === 'string' ? input.sharedChordText : ''
 
+  const notationUpdate =
+    input.notation !== undefined ? notationToDb(input.notation) : undefined
+
   if (input.scoreId) {
     const existing = await prisma.score.findUnique({
       where: { id: input.scoreId },
@@ -98,6 +133,7 @@ export async function saveScore(input: SaveScoreInput) {
         data: {
           title,
           sharedChordText,
+          ...(notationUpdate !== undefined ? { notation: notationUpdate } : {}),
         },
       })
       await tx.scoreVerse.deleteMany({ where: { scoreId: input.scoreId } })
@@ -126,6 +162,7 @@ export async function saveScore(input: SaveScoreInput) {
       userId: input.userId,
       title,
       sharedChordText,
+      notation: notationUpdate ?? {},
       verses: {
         create: normalizedVerses.map((verse, index) => ({
           orderIndex: index,

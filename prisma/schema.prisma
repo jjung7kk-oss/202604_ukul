@@ -24,6 +24,7 @@ model Score {
   userId          String
   title           String
   sharedChordText String       @default("")
+  notation        Json         @default("{}")
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   verses          ScoreVerse[]

@@ -153,6 +153,7 @@ app.get('/api/scores', async (req, res) => {
         id: score.id,
         title: score.title,
         sharedChordText: score.sharedChordText,
+        notation: score.notation,
         createdAt: score.createdAt.toISOString(),
         updatedAt: score.updatedAt.toISOString(),
         verses: score.verses.map((verse) => ({
@@ -176,9 +177,14 @@ app.post('/api/scores', async (req, res) => {
     scoreId?: unknown
     title?: unknown
     sharedChordText?: unknown
+    notation?: unknown
     verses?: unknown
   }
-  const scoreId = typeof body.scoreId === 'string' ? body.scoreId : undefined
+  const rawScoreId = body.scoreId
+  const scoreId =
+    typeof rawScoreId === 'string' && rawScoreId.trim().length > 0
+      ? rawScoreId.trim()
+      : undefined
   const title = typeof body.title === 'string' ? body.title : ''
   const sharedChordText =
     typeof body.sharedChordText === 'string' ? body.sharedChordText : ''
@@ -201,6 +207,7 @@ app.post('/api/scores', async (req, res) => {
       userId,
       title,
       sharedChordText,
+      notation: body.notation,
       verses,
     })
     res.json({
@@ -208,6 +215,7 @@ app.post('/api/scores', async (req, res) => {
         id: score.id,
         title: score.title,
         sharedChordText: score.sharedChordText,
+        notation: score.notation,
         createdAt: score.createdAt.toISOString(),
         updatedAt: score.updatedAt.toISOString(),
         verses: score.verses.map((verse) => ({

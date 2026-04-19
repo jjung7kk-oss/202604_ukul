@@ -11,6 +11,7 @@ export type ScoreDto = {
   id: string
   title: string
   sharedChordText: string
+  notation?: unknown
   createdAt: string
   updatedAt: string
   verses: ScoreVerseDto[]
@@ -20,6 +21,7 @@ export type SaveScorePayload = {
   scoreId?: string | null
   title: string
   sharedChordText: string
+  notation?: unknown
   verses: { label: string; lyrics: string }[]
 }
 
@@ -48,7 +50,8 @@ export async function fetchMyScores(authToken: string): Promise<ScoreDto[]> {
       throw new Error('로그인이 만료되었거나 권한이 없습니다.')
     }
     const err = await res.json().catch(() => ({}))
-    throw new Error(parseApiError(err, '내 악보 목록을 불러오지 못했습니다.'))
+    const msg = parseApiError(err, '내 악보 목록을 불러오지 못했습니다.')
+    throw new Error(`${msg} (HTTP ${res.status})`)
   }
   const data = (await res.json()) as { scores?: ScoreDto[] }
   return Array.isArray(data.scores) ? data.scores : []
@@ -68,7 +71,8 @@ export async function saveMyScore(
       throw new Error('로그인이 만료되었거나 권한이 없습니다.')
     }
     const err = await res.json().catch(() => ({}))
-    throw new Error(parseApiError(err, '악보 저장에 실패했습니다.'))
+    const msg = parseApiError(err, '악보 저장에 실패했습니다.')
+    throw new Error(`${msg} (HTTP ${res.status})`)
   }
   const data = (await res.json()) as { score?: ScoreDto }
   if (!data.score) {

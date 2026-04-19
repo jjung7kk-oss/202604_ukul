@@ -47,6 +47,7 @@ function mapScore(score: {
   id: string
   title: string
   sharedChordText: string
+  notation: unknown
   createdAt: Date
   updatedAt: Date
   verses: { id: string; orderIndex: number; label: string; lyrics: string }[]
@@ -55,6 +56,7 @@ function mapScore(score: {
     id: score.id,
     title: score.title,
     sharedChordText: score.sharedChordText,
+    notation: score.notation,
     createdAt: score.createdAt.toISOString(),
     updatedAt: score.updatedAt.toISOString(),
     verses: score.verses.map((verse) => ({
@@ -97,7 +99,11 @@ export default async function handler(
     const title = typeof body?.title === 'string' ? body.title : ''
     const sharedChordText =
       typeof body?.sharedChordText === 'string' ? body.sharedChordText : ''
-    const scoreId = typeof body?.scoreId === 'string' ? body.scoreId : undefined
+    const rawScoreId = body?.scoreId
+    const scoreId =
+      typeof rawScoreId === 'string' && rawScoreId.trim().length > 0
+        ? rawScoreId.trim()
+        : undefined
     const rawVerses = Array.isArray(body?.verses) ? body.verses : []
 
     const verses = rawVerses
@@ -122,6 +128,7 @@ export default async function handler(
         userId,
         title,
         sharedChordText,
+        notation: body?.notation,
         verses,
       })
       res.status(200).json({ score: mapScore(score) })
