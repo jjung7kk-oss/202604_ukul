@@ -28,6 +28,8 @@
   flex-wrap: wrap;
   row-gap: var(--space-3);
   overflow: visible;
+  /* flex 자식 기본 min-width:auto 때문에 메뉴가 한 줄로만 잡히고 뷰포트 밖으로 밀리면 overflow-x:hidden에 잘립니다 */
+  min-width: 0;
 }
 
 .app-header__brand {
@@ -51,7 +53,8 @@
 }
 
 .app-nav {
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .app-nav__list {
@@ -359,6 +362,28 @@
   margin: 0;
   color: var(--color-text-sub);
   max-width: 42em;
+}
+
+.chord-finder__hero-auth-tools {
+  margin: 4px 0 0;
+  font: var(--font-label-2);
+  color: var(--color-text-sub);
+}
+
+.chord-finder__hero-auth-sep {
+  margin: 0 6px;
+  color: color-mix(in srgb, var(--color-text-sub) 45%, transparent);
+}
+
+.chord-finder__hero-auth-link {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.chord-finder__hero-auth-link:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
 }
 
 .chord-finder__hero--compact .chord-finder__hero-title {

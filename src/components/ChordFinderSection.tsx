@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   fetchChordLibrary,
   type ChordLibraryLoadInfo,
@@ -14,8 +15,10 @@ import type { ChordLibrary, ChordQuality, RootName } from '../types/chord'
 import { ChordShapeGrid } from './ChordShapeGrid'
 import { QualityTabs } from './QualityTabs'
 import { RootTabs } from './RootTabs'
+import { useAdminAuth } from '../hooks/useAdminAuth'
 
 export function ChordFinderSection() {
+  const { isAuthenticated } = useAdminAuth()
   const [root, setRoot] = useState<RootName>('C')
   const [quality, setQuality] = useState<ChordQuality>('major')
   const [library, setLibrary] = useState<ChordLibrary | null>(null)
@@ -56,6 +59,19 @@ export function ChordFinderSection() {
         <p className="chord-finder__hero-desc">
           루트와 코드 타입을 고르면 운지를 바로 확인할 수 있어요.
         </p>
+        {isAuthenticated ? (
+          <p className="chord-finder__hero-auth-tools">
+            <Link to="/sheet/create" className="chord-finder__hero-auth-link">
+              악보 만들기
+            </Link>
+            <span aria-hidden="true" className="chord-finder__hero-auth-sep">
+              ·
+            </span>
+            <Link to="/edit" className="chord-finder__hero-auth-link">
+              코드 수정
+            </Link>
+          </p>
+        ) : null}
       </div>
 
       <div className="chord-finder__workspace">
