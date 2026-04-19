@@ -19,6 +19,29 @@ model Chord {
   @@unique([root, type])
 }
 
+model Score {
+  id              String       @id @default(cuid())
+  userId          String
+  title           String
+  sharedChordText String       @default("")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  verses          ScoreVerse[]
+
+  @@index([userId, updatedAt])
+}
+
+model ScoreVerse {
+  id         String @id @default(cuid())
+  scoreId    String
+  score      Score  @relation(fields: [scoreId], references: [id], onDelete: Cascade)
+  orderIndex Int
+  label      String
+  lyrics     String @default("")
+
+  @@index([scoreId, orderIndex])
+}
+
 model ChordShape {
   id         String @id @default(cuid())
   chordId    String

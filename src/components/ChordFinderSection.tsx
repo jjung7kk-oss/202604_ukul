@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import {
   fetchChordLibrary,
   type ChordLibraryLoadInfo,
@@ -114,11 +113,6 @@ export function ChordFinderSection() {
             <ChordDataFallbackBanner info={libraryLoadInfo} />
           </div>
         ) : null}
-        <footer className="chord-finder__footer-login">
-          <Link to="/admin/login" className="chord-finder__login-link">
-            로그인
-          </Link>
-        </footer>
       </div>
     </section>
   )

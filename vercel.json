@@ -2,7 +2,7 @@
   "buildCommand": "prisma generate && prisma migrate deploy && npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/chords/**/*.ts": {
+    "api/**/*.ts": {
       "includeFiles": "node_modules/.prisma/**"
     }
   },

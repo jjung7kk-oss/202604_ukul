@@ -37,20 +37,22 @@ export function signSessionToken(): string {
   return `${payloadB64}.${sig}`
 }
 
-export function verifySessionToken(token: string | null | undefined): boolean {
-  if (!token || typeof token !== 'string') return false
+function parseSessionTokenPayload(
+  token: string | null | undefined,
+): { exp: number; sub: string } | null {
+  if (!token || typeof token !== 'string') return null
   const dot = token.indexOf('.')
-  if (dot < 1) return false
+  if (dot < 1) return null
   const payloadB64 = token.slice(0, dot)
   const sig = token.slice(dot + 1)
-  if (!sig) return false
+  if (!sig) return null
   const expected = signPayload(payloadB64)
   try {
     if (!timingSafeEqual(Buffer.from(sig, 'utf8'), Buffer.from(expected, 'utf8'))) {
-      return false
+      return null
     }
   } catch {
-    return false
+    return null
   }
   let parsed: { exp?: number; sub?: string }
   try {
@@ -58,11 +60,19 @@ export function verifySessionToken(token: string | null | undefined): boolean {
       Buffer.from(payloadB64, 'base64url').toString('utf8'),
     ) as { exp?: number; sub?: string }
   } catch {
-    return false
+    return null
   }
-  if (parsed.sub !== 'admin' || typeof parsed.exp !== 'number') return false
-  if (parsed.exp < Date.now()) return false
-  return true
+  if (parsed.sub !== 'admin' || typeof parsed.exp !== 'number') return null
+  if (parsed.exp < Date.now()) return null
+  return { sub: parsed.sub, exp: parsed.exp }
+}
+
+export function verifySessionToken(token: string | null | undefined): boolean {
+  return parseSessionTokenPayload(token) != null
+}
+
+export function getSessionUserId(token: string | null | undefined): string | null {
+  return parseSessionTokenPayload(token)?.sub ?? null
 }
 
 export function getBearerToken(

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { fetchChordDetail, saveChordDetail } from '../api/chordsApi'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import {
@@ -15,7 +14,7 @@ import { RootTabs } from './RootTabs'
 const ROOTS_FOR_TABS = [...CANONICAL_ROOTS] as readonly RootName[]
 
 export function ChordEditPage() {
-  const { token, isAuthenticated, logout } = useAdminAuth()
+  const { token } = useAdminAuth()
   const [root, setRoot] = useState<CanonicalRootName>('C')
   const [quality, setQuality] = useState<ChordQuality>('major')
   const [inputs, setInputs] = useState<string[]>([])
@@ -280,21 +279,6 @@ export function ChordEditPage() {
         </div>
       </div>
 
-      <footer className="chord-edit__admin-foot">
-        {isAuthenticated ? (
-          <button
-            type="button"
-            className="chord-edit__admin-login-link"
-            onClick={() => logout()}
-          >
-            로그아웃
-          </button>
-        ) : (
-          <Link to="/admin/login" className="chord-edit__admin-login-link">
-            로그인
-          </Link>
-        )}
-      </footer>
     </section>
   )
 }

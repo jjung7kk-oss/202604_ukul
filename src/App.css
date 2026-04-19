@@ -120,9 +120,44 @@
   min-width: 0;
 }
 
+.app-footer {
+  flex-shrink: 0;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-6) var(--space-5);
+  display: flex;
+  justify-content: center;
+}
+
+.app-footer__auth-link {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font: var(--font-caption);
+  color: color-mix(in srgb, var(--color-text-sub) 28%, transparent);
+  text-decoration: none;
+}
+
+.app-footer__auth-link:hover {
+  color: color-mix(in srgb, var(--color-text-sub) 45%, transparent);
+  text-decoration: underline;
+}
+
+.app-footer__auth-link:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
 @media (max-width: 1279px) {
   .app-main {
     padding: var(--space-4) var(--space-5) var(--space-5);
+  }
+
+  .app-footer {
+    padding: var(--space-2) var(--space-5) var(--space-4);
   }
 }
 
@@ -142,6 +177,10 @@
 
   .app-main {
     padding: var(--space-3) var(--space-4) var(--space-5);
+  }
+
+  .app-footer {
+    padding: var(--space-2) var(--space-4) var(--space-4);
   }
 }
 
@@ -226,22 +265,6 @@
   margin: 0;
 }
 
-.chord-finder__footer-login {
-  text-align: center;
-  padding-bottom: var(--space-2);
-}
-
-.chord-finder__login-link {
-  display: inline-block;
-  font: var(--font-caption);
-  color: color-mix(in srgb, var(--color-text-sub) 28%, transparent);
-  text-decoration: none;
-}
-
-.chord-finder__login-link:hover {
-  color: color-mix(in srgb, var(--color-text-sub) 45%, transparent);
-  text-decoration: underline;
-}
 
 @media (min-width: 768px) {
   .chord-finder__body {
@@ -619,31 +642,6 @@
   margin-top: var(--space-2);
 }
 
-.chord-edit__admin-foot {
-  margin-top: var(--space-3);
-  padding-bottom: var(--space-2);
-  text-align: center;
-}
-
-.chord-edit__admin-login-link {
-  display: inline-block;
-  font: var(--font-caption);
-  color: color-mix(in srgb, var(--color-text-sub) 28%, transparent);
-  text-decoration: none;
-}
-
-button.chord-edit__admin-login-link {
-  border: none;
-  background: none;
-  padding: 0;
-  cursor: pointer;
-  font: var(--font-caption);
-}
-
-.chord-edit__admin-login-link:hover {
-  color: color-mix(in srgb, var(--color-text-sub) 45%, transparent);
-  text-decoration: underline;
-}
 
 /* --- Chord edit page ---------------------------------------------------- */
 .chord-edit {
@@ -855,6 +853,299 @@ button.chord-edit__admin-login-link {
     width: 100%;
     justify-content: flex-start;
     gap: 2px 4px;
+  }
+}
+
+/* --- Score create page -------------------------------------------------- */
+.score-create-page {
+  text-align: left;
+  color: var(--color-text-main);
+}
+
+.score-create-page__workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.score-create-page__guide {
+  gap: var(--space-2);
+}
+
+.score-create-page__guide-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font: var(--font-body-2);
+  color: var(--color-text-sub);
+}
+
+.score-create-page__guide-list code {
+  font: var(--font-label-2);
+}
+
+.score-create-page__manage {
+  gap: var(--space-2);
+}
+
+.score-create-page__manage-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.score-create-page__manage-current,
+.score-create-page__saved-meta {
+  margin: 0;
+  font: var(--font-caption);
+  color: var(--color-text-sub);
+}
+
+.score-create-page__manage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.score-create-page__saved-list {
+  gap: var(--space-2);
+}
+
+.score-create-page__saved-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.score-create-page__saved-btn {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-page);
+  padding: 8px 10px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  cursor: pointer;
+  text-align: left;
+}
+
+.score-create-page__saved-btn:hover {
+  border-color: var(--color-primary-light);
+  background: color-mix(in srgb, var(--color-bg-page) 88%, #fff);
+}
+
+.score-create-page__saved-btn--active {
+  border-color: var(--color-primary);
+}
+
+.score-create-page__saved-title {
+  font: var(--font-label-1);
+  color: var(--color-text-main);
+}
+
+.score-create-page__saved-date {
+  font: var(--font-caption);
+  color: var(--color-text-sub);
+}
+
+.score-create-page__input-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.score-create-page__verse {
+  gap: var(--space-2);
+  min-height: 100%;
+}
+
+.score-create-page__verse-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.score-create-page__verse-add-row {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.score-create-page__code {
+  gap: var(--space-2);
+  min-height: 100%;
+}
+
+.score-create-page__textarea--code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+}
+
+.score-create-page__textarea--code::placeholder {
+  color: color-mix(in srgb, var(--color-text-sub) 32%, transparent);
+  opacity: 1;
+}
+
+.score-create-page__textarea {
+  width: 100%;
+  min-height: 220px;
+  resize: vertical;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  font: var(--font-body-2);
+  line-height: 1.5;
+  color: var(--color-text-main);
+  background: var(--color-bg-card);
+}
+
+.score-create-page__textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(47, 128, 237, 0.2);
+}
+
+.score-create-page__preview {
+  gap: var(--space-2);
+}
+
+.score-create-page__preview-meta {
+  margin: 0;
+  font: var(--font-label-2);
+  color: var(--color-text-sub);
+}
+
+.score-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.score-preview__row-wrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.score-preview__row {
+  display: grid;
+  grid-template-columns: repeat(var(--measure-count), minmax(120px, 1fr));
+  align-items: stretch;
+  width: 100%;
+  min-width: 560px;
+}
+
+.score-preview__row--empty {
+  opacity: 0.85;
+}
+
+.score-preview__measure {
+  display: flex;
+  flex-direction: column;
+  border-left: 2px solid var(--color-text-main);
+}
+
+.score-preview__measure:first-child {
+  border-left-width: 3px;
+}
+
+.score-preview__measure:last-child {
+  border-right: 3px solid var(--color-text-main);
+}
+
+.score-preview__sign-slot {
+  min-height: 18px;
+}
+
+.score-preview__chord-slot {
+  position: relative;
+  min-height: 28px;
+  padding: 0 12px 4px;
+}
+
+.score-preview__chord-slot::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-bottom: 1px solid var(--color-text-main);
+}
+
+.score-preview__chord-token {
+  position: absolute;
+  top: 0;
+  font: 700 1rem/1.1 var(--font-family);
+  color: var(--color-text-main);
+  white-space: nowrap;
+}
+
+.score-preview__chord-track {
+  position: relative;
+  height: 100%;
+}
+
+.score-preview__lyric-slot {
+  display: flex;
+  align-items: flex-end;
+  min-height: 30px;
+  padding: 6px 12px 4px;
+  font: var(--font-body-2);
+  color: var(--color-text-main);
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.score-preview__lyric-slot--extra {
+  align-items: flex-start;
+  padding-top: 3px;
+  color: var(--color-text-sub);
+}
+
+.score-preview__measure-empty {
+  color: var(--color-text-sub);
+  font: var(--font-caption);
+}
+
+@media (max-width: 767px) {
+  .score-create-page__saved-btn {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .score-create-page__input-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .score-preview {
+    gap: var(--space-3);
+  }
+
+  .score-preview__row {
+    min-width: 460px;
+  }
+
+  .score-preview__measure {
+    min-height: 0;
+  }
+
+  .score-preview__lyric-slot {
+    padding: 6px 10px 4px;
+  }
+
+  .score-preview__chord-token {
+    font-size: 0.95rem;
   }
 }
 

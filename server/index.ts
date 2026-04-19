@@ -3,6 +3,7 @@ import cors from 'cors'
 import express from 'express'
 import {
   getBearerToken,
+  getSessionUserId,
   signSessionToken,
   verifyCredentials,
   verifySessionToken,
@@ -12,6 +13,17 @@ import {
   getChordLibrary,
   replaceChordShapes,
 } from '../lib/chordService'
+import { formatScoreDbError } from '../lib/scoreDbError'
+import { saveScore, listScoresByUser, ScoreServiceError } from '../lib/scoreService'
+
+function logRouteError(route: string, e: unknown): void {
+  if (e instanceof Error) {
+    console.error(`[${route}]`, e.message)
+    console.error(e.stack)
+    return
+  }
+  console.error(`[${route}]`, e)
+}
 
 const app = express()
 const PORT = Number(process.env.PORT) || 4000
@@ -35,6 +47,19 @@ function requireAdminAuth(
     return
   }
   next()
+}
+
+function requireAdminUserId(
+  req: express.Request,
+  res: express.Response,
+): string | null {
+  const token = getBearerToken(req.headers.authorization)
+  const userId = getSessionUserId(token)
+  if (!userId) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return null
+  }
+  return userId
 }
 
 app.get('/api/health', (_req, res) => {
@@ -115,6 +140,101 @@ app.put('/api/chords/detail', requireAdminAuth, async (req, res) => {
   } catch (e) {
     console.error(e)
     res.status(500).json({ error: 'Failed to save' })
+  }
+})
+
+app.get('/api/scores', async (req, res) => {
+  const userId = requireAdminUserId(req, res)
+  if (!userId) return
+  try {
+    const scores = await listScoresByUser(userId)
+    res.json({
+      scores: scores.map((score) => ({
+        id: score.id,
+        title: score.title,
+        sharedChordText: score.sharedChordText,
+        createdAt: score.createdAt.toISOString(),
+        updatedAt: score.updatedAt.toISOString(),
+        verses: score.verses.map((verse) => ({
+          id: verse.id,
+          orderIndex: verse.orderIndex,
+          label: verse.label,
+          lyrics: verse.lyrics,
+        })),
+      })),
+    })
+  } catch (e) {
+    logRouteError('GET /api/scores', e)
+    res.status(500).json({ error: formatScoreDbError(e) })
+  }
+})
+
+app.post('/api/scores', async (req, res) => {
+  const userId = requireAdminUserId(req, res)
+  if (!userId) return
+  const body = req.body as {
+    scoreId?: unknown
+    title?: unknown
+    sharedChordText?: unknown
+    verses?: unknown
+  }
+  const scoreId = typeof body.scoreId === 'string' ? body.scoreId : undefined
+  const title = typeof body.title === 'string' ? body.title : ''
+  const sharedChordText =
+    typeof body.sharedChordText === 'string' ? body.sharedChordText : ''
+  const verses = Array.isArray(body.verses)
+    ? body.verses
+        .map((verse, index) => {
+          if (!verse || typeof verse !== 'object') return null
+          const v = verse as { label?: unknown; lyrics?: unknown }
+          return {
+            label: typeof v.label === 'string' ? v.label : `${index + 1}절`,
+            lyrics: typeof v.lyrics === 'string' ? v.lyrics : '',
+          }
+        })
+        .filter((verse): verse is { label: string; lyrics: string } => verse != null)
+    : []
+
+  try {
+    const score = await saveScore({
+      scoreId,
+      userId,
+      title,
+      sharedChordText,
+      verses,
+    })
+    res.json({
+      score: {
+        id: score.id,
+        title: score.title,
+        sharedChordText: score.sharedChordText,
+        createdAt: score.createdAt.toISOString(),
+        updatedAt: score.updatedAt.toISOString(),
+        verses: score.verses.map((verse) => ({
+          id: verse.id,
+          orderIndex: verse.orderIndex,
+          label: verse.label,
+          lyrics: verse.lyrics,
+        })),
+      },
+    })
+  } catch (e) {
+    if (e instanceof ScoreServiceError) {
+      if (e.code === 'BAD_REQUEST') {
+        res.status(400).json({ error: e.message })
+        return
+      }
+      if (e.code === 'NOT_FOUND') {
+        res.status(404).json({ error: e.message })
+        return
+      }
+      if (e.code === 'FORBIDDEN') {
+        res.status(403).json({ error: e.message })
+        return
+      }
+    }
+    logRouteError('POST /api/scores', e)
+    res.status(500).json({ error: formatScoreDbError(e) })
   }
 })
 

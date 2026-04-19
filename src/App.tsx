@@ -1,19 +1,22 @@
-import { NavLink, Outlet, Route, Routes, useLocation } from 'react-router-dom'
+import { Link, NavLink, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { AdminLoginPage } from './components/AdminLoginPage'
 import { ChordEditPage } from './components/ChordEditPage'
 import { ChordFinderSection } from './components/ChordFinderSection'
 import { RequireAdmin } from './components/RequireAdmin'
+import { ScoreCreatePage } from './components/ScoreCreatePage'
 import { TransposePage } from './components/TransposePage'
 import { useAdminAuth } from './hooks/useAdminAuth'
 import './App.css'
 
 function AppLayout() {
-  const { pathname } = useLocation()
-  const { isAuthenticated } = useAdminAuth()
+  const location = useLocation()
+  const { pathname } = location
+  const { isAuthenticated, logout } = useAdminAuth()
   const finderNavActive =
     pathname === '/' || pathname === '/finder'
   const editNavActive =
     pathname === '/edit' || pathname === '/admin/chords'
+  const scoreCreateNavActive = pathname === '/sheet/create'
 
   return (
     <div className="app-shell">
@@ -52,6 +55,18 @@ function AppLayout() {
                   </NavLink>
                 </li>
               ) : null}
+              {isAuthenticated ? (
+                <li className="app-nav__item">
+                  <NavLink
+                    to="/sheet/create"
+                    className={() =>
+                      `app-nav__link${scoreCreateNavActive ? ' app-nav__link--active' : ''}`
+                    }
+                  >
+                    악보 만들기
+                  </NavLink>
+                </li>
+              ) : null}
               <li className="app-nav__item">
                 <NavLink
                   to="/transpose"
@@ -69,6 +84,25 @@ function AppLayout() {
       <main className="app-main">
         <Outlet />
       </main>
+      <footer className="app-footer">
+        {isAuthenticated ? (
+          <button
+            type="button"
+            className="app-footer__auth-link"
+            onClick={() => logout()}
+          >
+            로그아웃
+          </button>
+        ) : (
+          <Link
+            to="/admin/login"
+            className="app-footer__auth-link"
+            state={{ from: location }}
+          >
+            로그인
+          </Link>
+        )}
+      </footer>
     </div>
   )
 }
@@ -93,6 +127,14 @@ function App() {
           element={
             <RequireAdmin>
               <ChordEditPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="sheet/create"
+          element={
+            <RequireAdmin>
+              <ScoreCreatePage />
             </RequireAdmin>
           }
         />
