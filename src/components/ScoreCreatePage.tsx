@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+} from 'react'
 import {
   fetchMyScores,
   saveMyScore,
@@ -138,11 +147,92 @@ function formatUpdatedAt(dateString: string): string {
   }
 }
 
-function getChordTokenPositions(chordCount: number): number[] {
-  if (chordCount <= 1) return [0]
-  if (chordCount === 2) return [0, 50]
-  if (chordCount === 3) return [0, 50, 75]
-  return [0, 25, 50, 75]
+type ChordAnchor = 'start' | 'center' | 'end'
+
+/** 첫 코드=가사 시작선, 2개일 때 둘째=50% 중앙, 3개 이상은 0~100% 균등 + 끝 정렬 */
+function getChordTokenLayouts(
+  chordCount: number,
+): { leftPct: number; anchor: ChordAnchor }[] {
+  if (chordCount <= 0) return []
+  if (chordCount === 1) return [{ leftPct: 0, anchor: 'start' }]
+  if (chordCount === 2) {
+    return [
+      { leftPct: 0, anchor: 'start' },
+      { leftPct: 50, anchor: 'center' },
+    ]
+  }
+  return Array.from({ length: chordCount }, (_, i) => {
+    const leftPct = (i / (chordCount - 1)) * 100
+    const anchor: ChordAnchor =
+      i === 0 ? 'start' : i === chordCount - 1 ? 'end' : 'center'
+    return { leftPct, anchor }
+  })
+}
+
+function chordTokenTransform(anchor: ChordAnchor): string | undefined {
+  if (anchor === 'center') return 'translateX(-50%)'
+  if (anchor === 'end') return 'translateX(-100%)'
+  return undefined
+}
+
+function LyricFitText({
+  text,
+  className,
+  emptyLabel,
+}: {
+  text: string
+  className?: string
+  emptyLabel?: string
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  const displayText = text.replace(/\r?\n/g, ' ')
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const fit = (): void => {
+      const maxPx = 14
+      const minPx = 8.5
+      if (!displayText.trim()) {
+        el.style.fontSize = ''
+        return
+      }
+      el.style.fontSize = `${maxPx}px`
+      let size = maxPx
+      const w = el.clientWidth
+      if (w <= 0) return
+      let guard = 0
+      while (size > minPx && el.scrollWidth > w && guard < 56) {
+        size -= 0.5
+        el.style.fontSize = `${size}px`
+        guard += 1
+      }
+    }
+    fit()
+    const parent = el.parentElement
+    if (!parent) return
+    const ro = new ResizeObserver(() => fit())
+    ro.observe(parent)
+    return () => ro.disconnect()
+  }, [displayText])
+
+  if (!text.trim()) {
+    return (
+      <span className={className} aria-label={emptyLabel}>
+        {'\u00A0'}
+      </span>
+    )
+  }
+
+  return (
+    <div
+      ref={ref}
+      className={`score-preview__lyric-fit${className ? ` ${className}` : ''}`}
+    >
+      {displayText}
+    </div>
+  )
 }
 
 function compareMeasureKeys(a: string, b: string): number {
@@ -714,18 +804,51 @@ export function ScoreCreatePage() {
           <h2 id="score-preview-title" className="chord-finder__heading">
             미리보기
           </h2>
-          <p className="score-create-page__preview-meta">
-            {activeVerses.map((verse) => verse.label).join(' · ')}
-          </p>
+          {!hasVerse1Input ? (
+            <p className="score-create-page__preview-meta">
+              {activeVerses.map((verse) => verse.label).join(' · ')}
+            </p>
+          ) : null}
           {hasVerse1Input ? (
             <>
               <div className="score-preview" aria-live="polite">
+                <header className="score-preview__sheet-head">
+                  <h3 className="score-preview__sheet-title">
+                    {title.trim().length > 0 ? title.trim() : '곡 제목'}
+                  </h3>
+                </header>
                 {previewLines.map((line) => {
                   const measureCount =
                     line.measures.length > 0 ? line.measures.length : 1
                   const voltaForLine = notation.endings.filter(
                     (e) => e.lineIndex === line.lineIndex,
                   )
+                  const sheetGridStyle = {
+                    '--measure-count': String(measureCount),
+                    gridTemplateColumns: `repeat(${measureCount}, minmax(0, 1fr))`,
+                  } as CSSProperties
+
+                  const measureBlock = (measureIndex: number) => {
+                    const measureKey = makeMeasureKey(line.lineIndex, measureIndex)
+                    const meta = notation.measures[measureKey]
+                    const selected = selectedMeasureKeys.has(measureKey)
+                    const cellSel = selected ? ' score-preview__sheet-cell--selected' : ''
+                    const activate = () => toggleMeasureSelection(measureKey)
+                    const onKeyChord = (ev: KeyboardEvent) => {
+                      if (ev.key === 'Enter' || ev.key === ' ') {
+                        ev.preventDefault()
+                        activate()
+                      }
+                    }
+                    return {
+                      meta,
+                      selected,
+                      cellSel,
+                      activate,
+                      onKeyChord,
+                    }
+                  }
+
                   return (
                     <div
                       key={line.id}
@@ -757,130 +880,199 @@ export function ScoreCreatePage() {
                         </div>
                       ) : null}
                       <div
-                        className={`score-preview__row${line.measures.length === 0 ? ' score-preview__row--empty' : ''}`}
-                        style={
-                          {
-                            '--measure-count': String(measureCount),
-                          } as CSSProperties
-                        }
+                        className={`score-preview__sheet${line.measures.length === 0 ? ' score-preview__sheet--empty' : ''}`}
+                        style={sheetGridStyle}
                       >
                         {line.measures.length > 0 ? (
-                          line.measures.map((measure, measureIndex) => {
-                            const measureKey = makeMeasureKey(line.lineIndex, measureIndex)
-                            const meta = notation.measures[measureKey]
-                            const selected = selectedMeasureKeys.has(measureKey)
-                            return (
-                              <div
-                                key={measure.id}
-                                className={`score-preview__measure${selected ? ' score-preview__measure--selected' : ''}`}
-                                role="button"
-                                tabIndex={0}
-                                aria-pressed={selected}
-                                aria-label={`마디 ${measureIndex + 1}, 선택 ${selected ? '됨' : '안 됨'}`}
-                                onClick={() => toggleMeasureSelection(measureKey)}
-                                onKeyDown={(ev) => {
-                                  if (ev.key === 'Enter' || ev.key === ' ') {
-                                    ev.preventDefault()
-                                    toggleMeasureSelection(measureKey)
-                                  }
-                                }}
-                              >
-                                <div className="score-preview__sign-slot">
-                                  <div className="score-preview__marker-line">
-                                    {meta?.segno ? (
-                                      <span className="score-preview__marker">세뇨</span>
-                                    ) : null}
-                                    {meta?.coda ? (
-                                      <span className="score-preview__marker">Coda</span>
-                                    ) : null}
-                                    {meta?.toCoda ? (
-                                      <span className="score-preview__marker">To Coda</span>
-                                    ) : null}
-                                    {meta?.fine ? (
-                                      <span className="score-preview__marker">Fine</span>
-                                    ) : null}
-                                  </div>
-                                </div>
-                                <div className="score-preview__chord-row">
-                                  <span
-                                    className={`score-preview__rep score-preview__rep--start${meta?.repeatStart ? '' : ' score-preview__rep--off'}`}
-                                    aria-label={meta?.repeatStart ? '되돌이표 시작' : undefined}
-                                    aria-hidden={!meta?.repeatStart}
-                                  >
-                                    |:
-                                  </span>
-                                  <div className="score-preview__chord-slot" aria-label="코드 영역">
-                                    <div className="score-preview__chord-track">
-                                      {measure.chords.map((chord, chordIndex) => {
-                                        const positions = getChordTokenPositions(
-                                          measure.chords.length,
-                                        )
-                                        return (
-                                          <span
-                                            key={`${measure.id}-chord-${chordIndex + 1}`}
-                                            className="score-preview__chord-token"
-                                            style={{ left: `${positions[chordIndex] ?? 0}%` }}
-                                          >
-                                            {chord}
-                                          </span>
-                                        )
-                                      })}
+                          <>
+                            {line.measures.map((measure, measureIndex) => {
+                              const b = measureBlock(measureIndex)
+                              const chordLayouts = getChordTokenLayouts(measure.chords.length)
+                              return (
+                                <div
+                                  key={`${measure.id}-chords`}
+                                  className={`score-preview__sheet-cell score-preview__sheet-cell--chords${b.cellSel}`}
+                                  style={{ gridColumn: measureIndex + 1, gridRow: 1 }}
+                                  role="button"
+                                  tabIndex={0}
+                                  aria-pressed={b.selected}
+                                  aria-label={`마디 ${measureIndex + 1} 코드, 선택 ${b.selected ? '됨' : '안 됨'}`}
+                                  onClick={b.activate}
+                                  onKeyDown={b.onKeyChord}
+                                >
+                                  <div className="score-preview__sign-slot">
+                                    <div className="score-preview__marker-line">
+                                      {b.meta?.segno ? (
+                                        <span className="score-preview__marker">세뇨</span>
+                                      ) : null}
+                                      {b.meta?.coda ? (
+                                        <span className="score-preview__marker">Coda</span>
+                                      ) : null}
+                                      {b.meta?.toCoda ? (
+                                        <span className="score-preview__marker">To Coda</span>
+                                      ) : null}
+                                      {b.meta?.fine ? (
+                                        <span className="score-preview__marker">Fine</span>
+                                      ) : null}
                                     </div>
                                   </div>
-                                  <span
-                                    className={`score-preview__rep score-preview__rep--end${meta?.repeatEnd ? '' : ' score-preview__rep--off'}`}
-                                    aria-label={meta?.repeatEnd ? '되돌이표 끝' : undefined}
-                                    aria-hidden={!meta?.repeatEnd}
-                                  >
-                                    :|
-                                  </span>
-                                </div>
-                                {measure.lyrics.map((lyricSlot, slotIndex) => (
-                                  <div
-                                    key={`${measure.id}-${lyricSlot.verseId}`}
-                                    className={`score-preview__lyric-slot${slotIndex > 0 ? ' score-preview__lyric-slot--extra' : ''}`}
-                                  >
-                                    {lyricSlot.text.length > 0 ? (
-                                      lyricSlot.text
-                                    ) : (
-                                      <span
-                                        className="score-preview__measure-empty"
-                                        aria-label={`${lyricSlot.label} 빈 마디`}
-                                      >
-                                        {'\u00A0'}
-                                      </span>
-                                    )}
-                                  </div>
-                                ))}
-                                <div className="score-preview__jump-slot">
-                                  {meta?.jumpDirective ? (
-                                    <span className="score-preview__jump-text">
-                                      {JUMP_LABELS[meta.jumpDirective]}
+                                  <div className="score-preview__chord-row">
+                                    <span
+                                      className={`score-preview__rep score-preview__rep--start${b.meta?.repeatStart ? '' : ' score-preview__rep--off'}`}
+                                      aria-label={
+                                        b.meta?.repeatStart ? '되돌이표 시작' : undefined
+                                      }
+                                      aria-hidden={!b.meta?.repeatStart}
+                                    >
+                                      |:
                                     </span>
-                                  ) : null}
+                                    <span
+                                      className={`score-preview__rep score-preview__rep--end${b.meta?.repeatEnd ? '' : ' score-preview__rep--off'}`}
+                                      aria-label={b.meta?.repeatEnd ? '되돌이표 끝' : undefined}
+                                      aria-hidden={!b.meta?.repeatEnd}
+                                    >
+                                      :|
+                                    </span>
+                                    <div className="score-preview__chord-slot" aria-label="코드">
+                                      <div className="score-preview__chord-track">
+                                        {measure.chords.map((chord, chordIndex) => {
+                                          const layout = chordLayouts[chordIndex] ?? {
+                                            leftPct: 0,
+                                            anchor: 'start' as const,
+                                          }
+                                          return (
+                                            <span
+                                              key={`${measure.id}-chord-${chordIndex + 1}`}
+                                              className="score-preview__chord-token"
+                                              style={{
+                                                left: `${layout.leftPct}%`,
+                                                transform: chordTokenTransform(layout.anchor),
+                                              }}
+                                            >
+                                              {chord}
+                                            </span>
+                                          )
+                                        })}
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            )
-                          })
+                              )
+                            })}
+                            <div
+                              className="score-preview__staff"
+                              style={{ gridColumn: '1 / -1', gridRow: 2 }}
+                            >
+                              <div className="score-preview__staff-hline" aria-hidden="true" />
+                              {Array.from({ length: measureCount + 1 }, (_, tickIndex) => (
+                                <span
+                                  key={`${line.id}-tick-${tickIndex}`}
+                                  className={`score-preview__staff-tick${tickIndex === 0 ? ' score-preview__staff-tick--start' : ''}${tickIndex === measureCount ? ' score-preview__staff-tick--end' : ''}`}
+                                  style={{ left: `${(100 * tickIndex) / measureCount}%` }}
+                                  aria-hidden="true"
+                                />
+                              ))}
+                            </div>
+                            {line.measures.map((measure, measureIndex) => {
+                              const b = measureBlock(measureIndex)
+                              return (
+                                <div
+                                  key={`${measure.id}-lyrics`}
+                                  className={`score-preview__sheet-cell score-preview__sheet-cell--lyrics${b.cellSel}`}
+                                  style={{ gridColumn: measureIndex + 1, gridRow: 3 }}
+                                  role="presentation"
+                                  onClick={b.activate}
+                                >
+                                  {measure.lyrics.map((lyricSlot, slotIndex) => (
+                                    <div
+                                      key={`${measure.id}-${lyricSlot.verseId}`}
+                                      className={`score-preview__lyric-slot${slotIndex > 0 ? ' score-preview__lyric-slot--extra' : ''}`}
+                                    >
+                                      <LyricFitText
+                                        text={lyricSlot.text}
+                                        className={
+                                          lyricSlot.text.length > 0
+                                            ? undefined
+                                            : 'score-preview__measure-empty'
+                                        }
+                                        emptyLabel={`${lyricSlot.label} 빈 마디`}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              )
+                            })}
+                            {line.measures.map((measure, measureIndex) => {
+                              const b = measureBlock(measureIndex)
+                              return (
+                                <div
+                                  key={`${measure.id}-jump`}
+                                  className={`score-preview__sheet-cell score-preview__sheet-cell--jump${b.cellSel}`}
+                                  style={{ gridColumn: measureIndex + 1, gridRow: 4 }}
+                                  role="presentation"
+                                  onClick={b.activate}
+                                >
+                                  <div className="score-preview__jump-slot">
+                                    {b.meta?.jumpDirective ? (
+                                      <span className="score-preview__jump-text">
+                                        {JUMP_LABELS[b.meta.jumpDirective]}
+                                      </span>
+                                    ) : null}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </>
                         ) : (
-                          <div className="score-preview__measure score-preview__measure--empty-line">
-                            <div className="score-preview__sign-slot" aria-hidden="true" />
-                            <div className="score-preview__chord-row">
-                              <span className="score-preview__rep score-preview__rep--start score-preview__rep--off">
-                                |:
-                              </span>
-                              <div className="score-preview__chord-slot" aria-hidden="true" />
-                              <span className="score-preview__rep score-preview__rep--end score-preview__rep--off">
-                                :|
-                              </span>
+                          <>
+                            <div
+                              className="score-preview__sheet-cell score-preview__sheet-cell--chords"
+                              style={{ gridColumn: 1, gridRow: 1 }}
+                            >
+                              <div className="score-preview__sign-slot" aria-hidden="true" />
+                              <div className="score-preview__chord-row">
+                                <span className="score-preview__rep score-preview__rep--start score-preview__rep--off">
+                                  |:
+                                </span>
+                                <span className="score-preview__rep score-preview__rep--end score-preview__rep--off">
+                                  :|
+                                </span>
+                                <div className="score-preview__chord-slot" aria-hidden="true" />
+                              </div>
                             </div>
-                            <div className="score-preview__lyric-slot">
-                              <span className="score-preview__measure-empty" aria-label="빈 줄">
-                                {'\u00A0'}
-                              </span>
+                            <div
+                              className="score-preview__staff"
+                              style={{ gridColumn: '1 / -1', gridRow: 2 }}
+                            >
+                              <div className="score-preview__staff-hline" aria-hidden="true" />
+                              <span
+                                className="score-preview__staff-tick score-preview__staff-tick--start"
+                                style={{ left: '0%' }}
+                                aria-hidden="true"
+                              />
+                              <span
+                                className="score-preview__staff-tick score-preview__staff-tick--end"
+                                style={{ left: '100%' }}
+                                aria-hidden="true"
+                              />
                             </div>
-                            <div className="score-preview__jump-slot" />
-                          </div>
+                            <div
+                              className="score-preview__sheet-cell score-preview__sheet-cell--lyrics"
+                              style={{ gridColumn: 1, gridRow: 3 }}
+                            >
+                              <div className="score-preview__lyric-slot">
+                                <span className="score-preview__measure-empty" aria-label="빈 줄">
+                                  {'\u00A0'}
+                                </span>
+                              </div>
+                            </div>
+                            <div
+                              className="score-preview__sheet-cell score-preview__sheet-cell--jump"
+                              style={{ gridColumn: 1, gridRow: 4 }}
+                            >
+                              <div className="score-preview__jump-slot" />
+                            </div>
+                          </>
                         )}
                       </div>
                     </div>
