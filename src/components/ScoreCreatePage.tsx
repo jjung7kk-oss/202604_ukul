@@ -4,6 +4,7 @@ import {
   saveMyScore,
   type ScoreDto,
 } from '../api/scoresApi'
+import { chordLibrary } from '../data/chordData'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import {
   collectValidMeasureKeysFromPreview,
@@ -17,6 +18,7 @@ import {
   type ScoreNotationState,
 } from '../lib/scoreNotation'
 import { SCORE_PREVIEW_POPOUT_STORAGE_KEY } from '../lib/scorePreviewPopout'
+import { getRepresentativeShapeForSymbol } from '../utils/chordSymbolShape'
 import { ScoreNotationPanel } from './ScoreNotationPanel'
 import { ScoreSheetPreview, type PreviewLine } from './ScoreSheetPreview'
 
@@ -176,6 +178,7 @@ function rangeFromSelection(
 }
 
 type BoolMarkKey = 'repeatStart' | 'repeatEnd' | 'segno' | 'coda' | 'toCoda' | 'fine'
+type UnknownChordBodyMode = 'none' | 'first' | 'all'
 
 function flipBoolMeasureField(
   entry: MeasureNotation | undefined,
@@ -225,6 +228,9 @@ export function ScoreCreatePage() {
   const [actionOk, setActionOk] = useState<string | null>(null)
   const [notation, setNotation] = useState<ScoreNotationState>(emptyNotationState)
   const [selectedMeasureKeys, setSelectedMeasureKeys] = useState<Set<string>>(() => new Set())
+  const [selectedUnknownChords, setSelectedUnknownChords] = useState<Set<string>>(() => new Set())
+  const [showUnknownChordsBelowTitle, setShowUnknownChordsBelowTitle] = useState(false)
+  const [unknownChordBodyMode, setUnknownChordBodyMode] = useState<UnknownChordBodyMode>('none')
 
   const verse1 = draft.verses[0]
   const activeVerses = draft.verses
@@ -292,8 +298,45 @@ export function ScoreCreatePage() {
     () => formatSelectionSummary(selectedMeasureKeys),
     [selectedMeasureKeys],
   )
+  const usedChordSymbols = useMemo(() => {
+    const out: string[] = []
+    const seen = new Set<string>()
+    for (const line of previewLines) {
+      for (const measure of line.measures) {
+        for (const chord of measure.chords) {
+          const sym = chord.trim()
+          if (!sym || seen.has(sym)) continue
+          seen.add(sym)
+          out.push(sym)
+        }
+      }
+    }
+    return out
+  }, [previewLines])
+  const selectedUnknownChordSymbolsOrdered = useMemo(
+    () => usedChordSymbols.filter((symbol) => selectedUnknownChords.has(symbol)),
+    [selectedUnknownChords, usedChordSymbols],
+  )
+  const selectedUnknownChordShapeMap = useMemo(() => {
+    const out = new Map()
+    for (const symbol of selectedUnknownChordSymbolsOrdered) {
+      const shape = getRepresentativeShapeForSymbol(chordLibrary, symbol)
+      if (!shape) continue
+      out.set(symbol, shape)
+    }
+    return out
+  }, [selectedUnknownChordSymbolsOrdered])
 
   const hasVerse1Input = (verse1?.lyrics ?? '').trim().length > 0
+
+  useEffect(() => {
+    const allowed = new Set(usedChordSymbols)
+    setSelectedUnknownChords((prev) => {
+      const next = new Set([...prev].filter((symbol) => allowed.has(symbol)))
+      if (next.size === prev.size && [...next].every((symbol) => prev.has(symbol))) return prev
+      return next
+    })
+  }, [usedChordSymbols])
 
   const openPreviewPopout = useCallback(() => {
     if (!hasVerse1Input) return
@@ -305,6 +348,9 @@ export function ScoreCreatePage() {
           title: title.trim().length > 0 ? title.trim() : '곡 제목',
           lines: previewLines,
           notation,
+          selectedUnknownChords: selectedUnknownChordSymbolsOrdered,
+          showUnknownChordsBelowTitle,
+          unknownChordBodyMode,
         }),
       )
     } catch {
@@ -321,7 +367,15 @@ export function ScoreCreatePage() {
       setActionError('새 창이 차단되었습니다. 브라우저에서 팝업을 허용해 주세요.')
       setActionOk(null)
     }
-  }, [hasVerse1Input, title, previewLines, notation])
+  }, [
+    hasVerse1Input,
+    title,
+    previewLines,
+    notation,
+    selectedUnknownChordSymbolsOrdered,
+    showUnknownChordsBelowTitle,
+    unknownChordBodyMode,
+  ])
 
   const updateVerseLyrics = (verseId: string, lyrics: string) => {
     setDraft((prev) => ({
@@ -427,6 +481,15 @@ export function ScoreCreatePage() {
 
   const clearMeasureSelection = useCallback(() => {
     setSelectedMeasureKeys(new Set())
+  }, [])
+
+  const toggleUnknownChordSelection = useCallback((symbol: string) => {
+    setSelectedUnknownChords((prev) => {
+      const next = new Set(prev)
+      if (next.has(symbol)) next.delete(symbol)
+      else next.add(symbol)
+      return next
+    })
   }, [])
 
   const toggleBoolOnPrimary = useCallback(
@@ -555,6 +618,9 @@ export function ScoreCreatePage() {
     })
     setNotation(parseScoreNotation(score.notation))
     setSelectedMeasureKeys(new Set())
+    setSelectedUnknownChords(new Set())
+    setShowUnknownChordsBelowTitle(false)
+    setUnknownChordBodyMode('none')
     setActionError(null)
     setActionOk(`"${score.title}" 악보를 불러왔습니다.`)
   }
@@ -566,6 +632,9 @@ export function ScoreCreatePage() {
     setSharedChordText('')
     setNotation(emptyNotationState())
     setSelectedMeasureKeys(new Set())
+    setSelectedUnknownChords(new Set())
+    setShowUnknownChordsBelowTitle(false)
+    setUnknownChordBodyMode('none')
     setActionError(null)
     setActionOk('새 악보 작성을 시작합니다.')
   }
@@ -813,12 +882,85 @@ export function ScoreCreatePage() {
             </p>
           ) : null}
           {hasVerse1Input ? (
-            <div className="score-create-page__preview-tools">
+            <>
+              <div className="score-create-page__unknown-tool section-card section-card--flush">
+                <h3 className="chord-finder__heading">모르는 코드 운지 표시</h3>
+                {usedChordSymbols.length === 0 ? (
+                  <p className="score-create-page__unknown-empty">
+                    현재 악보에서 코드가 감지되지 않았습니다. 코드 입력을 먼저 확인해 주세요.
+                  </p>
+                ) : (
+                  <>
+                    <div className="score-create-page__unknown-list" role="group" aria-label="모르는 코드 선택">
+                      {usedChordSymbols.map((symbol) => (
+                        <label
+                          key={symbol}
+                          className="score-create-page__unknown-item"
+                          htmlFor={`unknown-chord-${symbol}`}
+                        >
+                          <input
+                            id={`unknown-chord-${symbol}`}
+                            type="checkbox"
+                            checked={selectedUnknownChords.has(symbol)}
+                            onChange={() => toggleUnknownChordSelection(symbol)}
+                          />
+                          <span>{symbol}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="score-create-page__unknown-options">
+                      <label className="score-create-page__unknown-opt" htmlFor="unknown-position-header">
+                        <input
+                          id="unknown-position-header"
+                          type="checkbox"
+                          checked={showUnknownChordsBelowTitle}
+                          onChange={(event) => setShowUnknownChordsBelowTitle(event.target.checked)}
+                        />
+                        <span>제목 아래 공통 표시</span>
+                      </label>
+                      <label className="score-create-page__unknown-opt" htmlFor="unknown-position-none">
+                        <input
+                          id="unknown-position-none"
+                          type="radio"
+                          name="unknown-body-position"
+                          checked={unknownChordBodyMode === 'none'}
+                          onChange={() => setUnknownChordBodyMode('none')}
+                        />
+                        <span>본문 미표시</span>
+                      </label>
+                      <label className="score-create-page__unknown-opt" htmlFor="unknown-position-first">
+                        <input
+                          id="unknown-position-first"
+                          type="radio"
+                          name="unknown-body-position"
+                          checked={unknownChordBodyMode === 'first'}
+                          onChange={() => setUnknownChordBodyMode('first')}
+                        />
+                        <span>본문 코드 옆 표시 (처음 1회)</span>
+                      </label>
+                      <label className="score-create-page__unknown-opt" htmlFor="unknown-position-all">
+                        <input
+                          id="unknown-position-all"
+                          type="radio"
+                          name="unknown-body-position"
+                          checked={unknownChordBodyMode === 'all'}
+                          onChange={() => setUnknownChordBodyMode('all')}
+                        />
+                        <span>본문 코드 옆 표시 (나올 때마다)</span>
+                      </label>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="score-create-page__preview-tools">
               <div className="score-create-page__preview-main">
                 <ScoreSheetPreview
                   title={title.trim().length > 0 ? title.trim() : '곡 제목'}
                   lines={previewLines}
                   notation={notation}
+                  unknownChordShapes={selectedUnknownChordShapeMap}
+                  showUnknownChordsBelowTitle={showUnknownChordsBelowTitle}
+                  unknownChordBodyMode={unknownChordBodyMode}
                   selectedMeasureKeys={selectedMeasureKeys}
                   onToggleMeasureKey={toggleMeasureSelection}
                   interactive
@@ -843,7 +985,8 @@ export function ScoreCreatePage() {
                   onRemoveEnding={removeEnding}
                 />
               </aside>
-            </div>
+              </div>
+            </>
           ) : (
             <p className="chord-finder__load-hint">
               1절 가사를 입력하면 줄/마디 기준 미리보기가 표시됩니다.

@@ -4,12 +4,14 @@ import {
   type CSSProperties,
   type KeyboardEvent,
 } from 'react'
+import type { ChordShape } from '../types/chord'
 import {
   JUMP_LABELS,
   makeMeasureKey,
   type JumpDirectiveKind,
   type ScoreNotationState,
 } from '../lib/scoreNotation'
+import { HorizontalChordDiagram } from './HorizontalChordDiagram'
 
 export type PreviewMeasure = {
   id: string
@@ -158,6 +160,9 @@ export type ScoreSheetPreviewProps = {
   title: string
   lines: PreviewLine[]
   notation: ScoreNotationState
+  unknownChordShapes?: ReadonlyMap<string, ChordShape>
+  showUnknownChordsBelowTitle?: boolean
+  unknownChordBodyMode?: 'none' | 'first' | 'all'
   selectedMeasureKeys: ReadonlySet<string>
   onToggleMeasureKey: (measureKey: string) => void
   interactive: boolean
@@ -167,10 +172,15 @@ export function ScoreSheetPreview({
   title,
   lines,
   notation,
+  unknownChordShapes = new Map<string, ChordShape>(),
+  showUnknownChordsBelowTitle = false,
+  unknownChordBodyMode = 'none',
   selectedMeasureKeys,
   onToggleMeasureKey,
   interactive,
 }: ScoreSheetPreviewProps) {
+  const unknownBodyVisible = unknownChordShapes.size > 0 && unknownChordBodyMode !== 'none'
+  const shownUnknownInBody = new Set<string>()
   const measureBlock = (lineIndex: number, measureIndex: number) => {
     const measureKey = makeMeasureKey(lineIndex, measureIndex)
     const meta = notation.measures[measureKey]
@@ -192,12 +202,24 @@ export function ScoreSheetPreview({
 
   return (
     <div
-      className={`score-preview${interactive ? '' : ' score-preview--readonly'}`}
+      className={`score-preview${interactive ? '' : ' score-preview--readonly'}${unknownBodyVisible ? ' score-preview--unknown-inline' : ''}`}
       aria-live="polite"
     >
       <header className="score-preview__sheet-head">
         <h3 className="score-preview__sheet-title">{title}</h3>
       </header>
+      {showUnknownChordsBelowTitle && unknownChordShapes.size > 0 ? (
+        <section className="score-preview__unknown-band" aria-label="모르는 코드 운지">
+          {[...unknownChordShapes.entries()].map(([symbol, shape]) => (
+            <article key={`unknown-title-${symbol}`} className="score-preview__unknown-card">
+              <h4 className="score-preview__unknown-name">{symbol}</h4>
+              <div className="score-preview__unknown-diagram-wrap">
+                <HorizontalChordDiagram shape={shape} className="score-preview__unknown-diagram" />
+              </div>
+            </article>
+          ))}
+        </section>
+      ) : null}
       {lines.map((line) => {
         const measureCount = line.measures.length > 0 ? line.measures.length : 1
         const voltaForLine = notation.endings.filter((e) => e.lineIndex === line.lineIndex)
@@ -265,7 +287,7 @@ export function ScoreSheetPreview({
                     return (
                       <div
                         key={`${measure.id}-chords`}
-                        className={`score-preview__sheet-cell score-preview__sheet-cell--chords${b.meta?.segno ? ' score-preview__sheet-cell--has-segno' : ''}${b.cellSel}`}
+                        className={`score-preview__sheet-cell score-preview__sheet-cell--chords${b.cellSel}`}
                         style={{ gridColumn: measureIndex + 1, gridRow: 1 }}
                         {...(interactive
                           ? {
@@ -299,6 +321,16 @@ export function ScoreSheetPreview({
                                   leftPct: 0,
                                   anchor: 'start' as const,
                                 }
+                                const unknownShape = unknownChordShapes.get(chord)
+                                let showUnknownInBody = false
+                                if (unknownShape && unknownChordBodyMode !== 'none') {
+                                  if (unknownChordBodyMode === 'all') {
+                                    showUnknownInBody = true
+                                  } else if (!shownUnknownInBody.has(chord)) {
+                                    shownUnknownInBody.add(chord)
+                                    showUnknownInBody = true
+                                  }
+                                }
                                 return (
                                   <span
                                     key={`${measure.id}-chord-${chordIndex + 1}`}
@@ -308,7 +340,15 @@ export function ScoreSheetPreview({
                                       transform: chordTokenTransform(layout.anchor),
                                     }}
                                   >
-                                    {chord}
+                                    <span className="score-preview__chord-token-label">{chord}</span>
+                                    {showUnknownInBody && unknownShape ? (
+                                      <span className="score-preview__inline-diagram-wrap" aria-hidden="true">
+                                        <HorizontalChordDiagram
+                                          shape={unknownShape}
+                                          className="score-preview__inline-diagram"
+                                        />
+                                      </span>
+                                    ) : null}
                                   </span>
                                 )
                               })}
@@ -480,6 +520,36 @@ export function ScoreSheetPreview({
           </div>
         )
       })}
+      <footer className="score-preview__brand-footer" aria-label="브랜드 표식">
+        <img
+          className="score-preview__brand-footer-logo"
+          src="/brand_images/images/logo.png"
+          alt="후이코드 로고"
+        />
+        <span className="score-preview__brand-footer-sep" aria-hidden="true">
+          ·
+        </span>
+        <span className="score-preview__brand-footer-text">#후이후이카이 우쿨렐레</span>
+        <span className="score-preview__brand-footer-sep" aria-hidden="true">
+          ·
+        </span>
+        <span className="score-preview__brand-footer-insta" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img">
+            <defs>
+              <radialGradient id="score-preview-ig-grad" cx="30%" cy="107%" r="130%">
+                <stop offset="0%" stopColor="#fdf497" />
+                <stop offset="30%" stopColor="#fd5949" />
+                <stop offset="60%" stopColor="#d6249f" />
+                <stop offset="100%" stopColor="#285AEB" />
+              </radialGradient>
+            </defs>
+            <rect x="2.8" y="2.8" width="18.4" height="18.4" rx="5.6" fill="url(#score-preview-ig-grad)" />
+            <circle cx="12" cy="12" r="4.2" fill="none" stroke="#fff" strokeWidth="1.9" />
+            <circle cx="17.7" cy="6.8" r="1.25" fill="#fff" />
+          </svg>
+        </span>
+        <span className="score-preview__brand-footer-text">huihui_kai</span>
+      </footer>
     </div>
   )
 }

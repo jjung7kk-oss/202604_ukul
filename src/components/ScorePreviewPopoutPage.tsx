@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import { chordLibrary } from '../data/chordData'
 import { parseScoreNotation, type ScoreNotationState } from '../lib/scoreNotation'
-import { SCORE_PREVIEW_POPOUT_STORAGE_KEY } from '../lib/scorePreviewPopout'
+import {
+  SCORE_PREVIEW_POPOUT_STORAGE_KEY,
+  type ScorePreviewPopoutStoredV1,
+} from '../lib/scorePreviewPopout'
+import { getRepresentativeShapeForSymbol } from '../utils/chordSymbolShape'
 import { ScoreSheetPreview, type PreviewLine } from './ScoreSheetPreview'
 
 function coerceLines(raw: unknown): PreviewLine[] {
@@ -14,6 +19,9 @@ export function ScorePreviewPopoutPage() {
   const [notation, setNotation] = useState<ScoreNotationState>(() =>
     parseScoreNotation(null),
   )
+  const [selectedUnknownChords, setSelectedUnknownChords] = useState<string[]>([])
+  const [showUnknownChordsBelowTitle, setShowUnknownChordsBelowTitle] = useState(false)
+  const [unknownChordBodyMode, setUnknownChordBodyMode] = useState<'none' | 'first' | 'all'>('none')
   const [loaded, setLoaded] = useState(false)
 
   useEffect(() => {
@@ -23,7 +31,9 @@ export function ScorePreviewPopoutPage() {
         setLoaded(true)
         return
       }
-      const parsed = JSON.parse(raw) as { v?: unknown; title?: unknown; lines?: unknown; notation?: unknown }
+      const parsed = JSON.parse(raw) as ScorePreviewPopoutStoredV1 & {
+        v?: unknown
+      }
       if (parsed?.v !== 1) {
         setLoaded(true)
         return
@@ -35,6 +45,17 @@ export function ScorePreviewPopoutPage() {
       setTitle(nextTitle)
       setLines(coerceLines(parsed.lines))
       setNotation(parseScoreNotation(parsed.notation))
+      setSelectedUnknownChords(
+        Array.isArray(parsed.selectedUnknownChords)
+          ? parsed.selectedUnknownChords.filter((v): v is string => typeof v === 'string')
+          : [],
+      )
+      setShowUnknownChordsBelowTitle(parsed.showUnknownChordsBelowTitle === true)
+      setUnknownChordBodyMode(
+        parsed.unknownChordBodyMode === 'all' || parsed.unknownChordBodyMode === 'first'
+          ? parsed.unknownChordBodyMode
+          : 'none',
+      )
     } catch {
       setLines([])
     } finally {
@@ -43,6 +64,15 @@ export function ScorePreviewPopoutPage() {
   }, [])
 
   const empty = useMemo(() => lines.length === 0, [lines.length])
+  const unknownChordShapeMap = useMemo(() => {
+    const out = new Map()
+    for (const symbol of selectedUnknownChords) {
+      const shape = getRepresentativeShapeForSymbol(chordLibrary, symbol)
+      if (!shape) continue
+      out.set(symbol, shape)
+    }
+    return out
+  }, [selectedUnknownChords])
 
   return (
     <div className="score-preview-popout-page">
@@ -56,6 +86,9 @@ export function ScorePreviewPopoutPage() {
           title={title}
           lines={lines}
           notation={notation}
+          unknownChordShapes={unknownChordShapeMap}
+          showUnknownChordsBelowTitle={showUnknownChordsBelowTitle}
+          unknownChordBodyMode={unknownChordBodyMode}
           selectedMeasureKeys={new Set()}
           onToggleMeasureKey={() => {}}
           interactive={false}

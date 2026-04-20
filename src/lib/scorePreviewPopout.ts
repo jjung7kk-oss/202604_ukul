@@ -6,4 +6,7 @@ export type ScorePreviewPopoutStoredV1 = {
   title: string
   lines: unknown
   notation: unknown
+  selectedUnknownChords?: unknown
+  showUnknownChordsBelowTitle?: unknown
+  unknownChordBodyMode?: unknown
 }
