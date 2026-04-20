@@ -2,7 +2,7 @@ import type { EndingBracket, JumpDirectiveKind } from '../lib/scoreNotation'
 
 type ScoreNotationPanelProps = {
   disabled?: boolean
-  selectionHint: string | null
+  selectionSummary: string
   endings: EndingBracket[]
   onClearSelection: () => void
   onToggleRepeatStart: () => void
@@ -11,20 +11,43 @@ type ScoreNotationPanelProps = {
   onToggleCoda: () => void
   onToggleToCoda: () => void
   onToggleFine: () => void
-  onSetJump: (kind: JumpDirectiveKind | null) => void
+  onSetJump: (kind: JumpDirectiveKind) => void
   onClearMeasureMarks: () => void
   onAddEnding1: () => void
   onAddEnding2: () => void
   onRemoveEnding: (id: string) => void
 }
 
-function btnClass(extra?: string): string {
-  return `score-notation__btn chord-edit__btn chord-edit__btn--secondary${extra ? ` ${extra}` : ''}`
+function SymbolBtn({
+  label,
+  tip,
+  onClick,
+  disabled,
+}: {
+  label: string
+  tip: string
+  onClick: () => void
+  disabled?: boolean
+}) {
+  return (
+    <div className="score-notation__symbol-cell">
+      <button
+        type="button"
+        className="score-notation__symbol-btn chord-edit__btn chord-edit__btn--secondary"
+        title={tip}
+        onClick={onClick}
+        disabled={disabled}
+      >
+        {label}
+      </button>
+      <p className="score-notation__symbol-tip">{tip}</p>
+    </div>
+  )
 }
 
 export function ScoreNotationPanel({
   disabled,
-  selectionHint,
+  selectionSummary,
   endings,
   onClearSelection,
   onToggleRepeatStart,
@@ -41,116 +64,89 @@ export function ScoreNotationPanel({
 }: ScoreNotationPanelProps) {
   return (
     <div className="section-card score-notation-panel">
-      <h2 className="chord-finder__heading">악보 기호</h2>
-      <p className="score-notation__lead">
-        미리보기에서 마디를 눌러 선택한 뒤, 아래에서 기호를 붙이거나 뺍니다. 같은 버튼을 다시 누르면
-        해제됩니다.
+      <div className="score-notation-panel__pin-actions">
+        <div className="score-notation__action-row score-notation__action-row--pinned">
+          <button
+            type="button"
+            className="score-notation__btn-select-clear chord-edit__btn chord-edit__btn--primary"
+            onClick={onClearSelection}
+            disabled={disabled}
+          >
+            선택 해제
+          </button>
+          <button
+            type="button"
+            className="score-notation__btn-marks-clear chord-edit__btn chord-edit__btn--secondary"
+            onClick={onClearMeasureMarks}
+            disabled={disabled}
+          >
+            기호 삭제
+          </button>
+        </div>
+      </div>
+
+      <h2 className="score-notation-panel__title chord-finder__heading">기호 넣기</h2>
+      <p className="score-notation__status" role="status">
+        {selectionSummary}
       </p>
-      {selectionHint ? (
-        <p className="score-notation__hint" role="status">
-          {selectionHint}
-        </p>
-      ) : null}
-      <div className="score-notation__actions">
-        <button
-          type="button"
-          className={btnClass()}
-          onClick={onClearSelection}
-          disabled={disabled}
-        >
-          선택 비우기
-        </button>
-        <button
-          type="button"
-          className={btnClass('score-notation__btn--ghost')}
-          onClick={onClearMeasureMarks}
-          disabled={disabled}
-        >
-          선택 마디 기호 전부 제거
-        </button>
+      <p className="score-notation__micro-hint">미리보기에서 마디를 선택한 뒤 기호를 넣어주세요.</p>
+
+      <div className="score-notation__symbol-grid" role="group" aria-label="반복·괄호">
+        <SymbolBtn label="|:" tip="반복 시작" onClick={onToggleRepeatStart} disabled={disabled} />
+        <SymbolBtn label=":|" tip="반복 끝" onClick={onToggleRepeatEnd} disabled={disabled} />
+        <SymbolBtn label="1." tip="첫 번째 반복 구간" onClick={onAddEnding1} disabled={disabled} />
+        <SymbolBtn label="2." tip="두 번째 반복 구간" onClick={onAddEnding2} disabled={disabled} />
       </div>
 
-      <h3 className="score-notation__subhead">1차 · 반복</h3>
-      <div className="score-notation__btn-row">
-        <button type="button" className={btnClass()} onClick={onToggleRepeatStart} disabled={disabled}>
-          되돌이표 시작 |:
-        </button>
-        <button type="button" className={btnClass()} onClick={onToggleRepeatEnd} disabled={disabled}>
-          되돌이표 끝 :|
-        </button>
-      </div>
-      <div className="score-notation__btn-row">
-        <button type="button" className={btnClass()} onClick={onAddEnding1} disabled={disabled}>
-          1번 괄호 (구간)
-        </button>
-        <button type="button" className={btnClass()} onClick={onAddEnding2} disabled={disabled}>
-          2번 괄호 (구간)
-        </button>
+      <hr className="score-notation__rule" />
+
+      <div className="score-notation__symbol-grid" role="group" aria-label="표지">
+        <SymbolBtn label="Segno" tip="돌아갈 기준 표시" onClick={onToggleSegno} disabled={disabled} />
+        <SymbolBtn label="Coda" tip="코다 구간 시작" onClick={onToggleCoda} disabled={disabled} />
+        <SymbolBtn label="To Coda" tip="여기서 코다로 이동" onClick={onToggleToCoda} disabled={disabled} />
+        <SymbolBtn label="Fine" tip="여기서 끝" onClick={onToggleFine} disabled={disabled} />
       </div>
 
-      <h3 className="score-notation__subhead">2차 · 표지</h3>
-      <div className="score-notation__btn-row score-notation__btn-row--wrap">
-        <button type="button" className={btnClass()} onClick={onToggleSegno} disabled={disabled}>
-          세뇨
-        </button>
-        <button type="button" className={btnClass()} onClick={onToggleCoda} disabled={disabled}>
-          코다
-        </button>
-        <button type="button" className={btnClass()} onClick={onToggleToCoda} disabled={disabled}>
-          To Coda
-        </button>
-        <button type="button" className={btnClass()} onClick={onToggleFine} disabled={disabled}>
-          Fine
-        </button>
-      </div>
+      <hr className="score-notation__rule" />
 
-      <h3 className="score-notation__subhead">3차 · 진행 지시</h3>
-      <div className="score-notation__btn-row score-notation__btn-row--wrap">
-        <button
-          type="button"
-          className={btnClass()}
+      <div className="score-notation__symbol-grid score-notation__symbol-grid--jump" role="group" aria-label="진행">
+        <SymbolBtn
+          label="D.S. al Coda"
+          tip="Segno로 돌아간 뒤 To Coda에서 Coda로 이동"
           onClick={() => onSetJump('DS_AL_CODA')}
           disabled={disabled}
-        >
-          D.S. al Coda
-        </button>
-        <button
-          type="button"
-          className={btnClass()}
+        />
+        <SymbolBtn
+          label="D.S. al Fine"
+          tip="Segno로 돌아간 뒤 Fine에서 끝"
           onClick={() => onSetJump('DS_AL_FINE')}
           disabled={disabled}
-        >
-          D.S. al Fine
-        </button>
-        <button
-          type="button"
-          className={btnClass()}
+        />
+        <SymbolBtn
+          label="D.C. al Coda"
+          tip="처음으로 돌아간 뒤 To Coda에서 Coda로 이동"
           onClick={() => onSetJump('DC_AL_CODA')}
           disabled={disabled}
-        >
-          D.C. al Coda
-        </button>
-        <button
-          type="button"
-          className={btnClass()}
+        />
+        <SymbolBtn
+          label="D.C. al Fine"
+          tip="처음으로 돌아간 뒤 Fine에서 끝"
           onClick={() => onSetJump('DC_AL_FINE')}
           disabled={disabled}
-        >
-          D.C. al Fine
-        </button>
-        <button type="button" className={btnClass()} onClick={() => onSetJump(null)} disabled={disabled}>
-          지시문 해제
-        </button>
+        />
       </div>
 
       {endings.length > 0 ? (
-        <div className="score-notation__endings">
-          <h3 className="score-notation__subhead">괄호 구간 목록</h3>
+        <details className="score-notation__applied">
+          <summary className="score-notation__applied-summary">적용된 구간</summary>
           <ul className="score-notation__ending-list">
             {endings.map((e) => (
               <li key={e.id} className="score-notation__ending-item">
                 <span className="score-notation__ending-label">
-                  {e.type}번 괄호 — {e.lineIndex + 1}줄, 마디 {e.startMeasureIndex + 1}~{e.endMeasureIndex + 1}
+                  {e.type}. — {e.lineIndex + 1}행{' '}
+                  {e.startMeasureIndex === e.endMeasureIndex
+                    ? `${e.startMeasureIndex + 1}마디`
+                    : `${e.startMeasureIndex + 1}~${e.endMeasureIndex + 1}마디`}
                 </span>
                 <button
                   type="button"
@@ -163,7 +159,7 @@ export function ScoreNotationPanel({
               </li>
             ))}
           </ul>
-        </div>
+        </details>
       ) : null}
     </div>
   )

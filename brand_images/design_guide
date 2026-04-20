@@ -846,3 +846,42 @@ When generating the UI:
 * follow the **2026-04 Shared layout density (three menus)** section for 코드찾기 / 코드수정 / 조변환 so all three menus share the same hero, card, and heading density
 * use the **Radius scale (2026-04, tool-like)** hierarchy: hero `lg`, cards `md`, inputs/small UI `sm`, chips `pill`
 
+---
+
+## Sheet create (악보 만들기) — workspace UX (2026-04, 2026-04 notation panel refresh)
+
+Applies to the **악보 만들기** route when verse 1 input exists and preview + notation tools are shown.
+
+### Layout (preview vs 기호 넣기)
+
+1. **Preview and notation tools stay close** — Avoid long vertical gaps between the score preview and the symbol panel; the editing flow should feel like one surface.
+2. **Laptop / desktop (about `1024px` and up): two-column work layout** — **Prioritize horizontal space for the preview** (left column `minmax(0, 1fr)`). Right: **기호 넣기** as a **narrow auxiliary tool strip** (~**168–204px**). Wrap **preview + symbols** in one **bounded work region** with **`max-height: min(72vh, 920px)`** (stay roughly **70–75vh**; cap with px so very tall monitors do not over-expand) and a **single `overflow-y: auto`** on that wrapper so the **page body does not grow without bound**. The tool column is **`position: sticky; top: 0`** inside that wrapper so it stays usable while scrolling a long score.
+3. **Tablet (`768px`–`1023px`, stacked)** — Same **bounded work region** idea with a **slightly lower** cap (e.g. **`~62vh`** capped in px) and the same shared vertical scroll. **Mobile (`<768px`)** — Prefer **natural page scroll** (no `max-height` / inner scroll on this wrapper) so reading and tapping follow normal vertical flow.
+
+### Tool panel (기호 넣기) — responsive button layout
+
+4. **Notebook / desktop (`≥1024px`, right sticky column)** — Symbol buttons use a **single vertical column** (`grid-template-columns: 1fr`) so the narrow strip reads like a **tool list**. Keep buttons **compact** (reduced padding / min-height vs generic form buttons) so the panel does not grow unnecessarily tall.
+5. **Tablet / stacked panel (`≤1023px`)** — Symbol groups use a **multi-column grid** so buttons spread horizontally: **4 columns** by default; **2 columns** on very narrow widths (e.g. `≤520px`) so phones stay tappable without an endless vertical stack.
+6. **Jump row (`D.S. al Coda`, etc.)** — Uses the **same grid rules** as other symbol groups (1 column in the right strip on desktop; 4 / 2 columns when stacked). Per-measure jump clearing is covered by **`기호 삭제`**; a separate in-row “Clear” control is not used.
+
+### Pinned primary actions
+
+7. **`선택 해제` / `기호 삭제`** — Placed in a **`position: sticky; top: 0`** strip at the **top of the tool panel** so they stay visible while scrolling **within the tool card**; on laptop+, the outer **preview-tools** scroll keeps the whole **기호 넣기** column **sticky** at the top of that work region. **선택 해제** stays **primary**; **기호 삭제** stays a **distinct secondary / neutral** control.
+
+### Help / tips (compact, non-blocking)
+
+8. **No reserved “tip rows”** that push the grid down — Per-button tips appear on **hover / `:focus-within`** as a **small overlay** under the control (absolute positioning), not as permanent multi-line blocks. On **touch / `hover: none`**, rely on **`title`** (and optional future popovers) instead of always-visible tip text so layout density stays high.
+
+### Grouping and density
+
+9. **Thin horizontal rules** remain between logical groups; keep **vertical margins on rules tight**. Panel typography (title, status, micro-hint) is **slightly smaller** than generic section cards so the block reads as a **working toolbar**, not a marketing card.
+
+### Measure selection
+
+10. **Contiguous-range multi-select** — Multiple measures are selected only when they form a **continuous run on the same staff line**. Clicking a measure on **another line** replaces the selection with that measure only.
+11. **Non-adjacent click on the same line** — Clicking a measure that would **break contiguity** replaces the selection with **only the newly clicked measure** (single selection), so picking a distant bar does not accumulate accidental multi-select.
+
+### Applied endings list
+
+12. **Lower priority** — Ending bracket summaries live in a **collapsible** block at the bottom of the tool panel (e.g. `<details>` “적용된 구간”), not as a large always-open section. Keep list rows and remove buttons **compact** to match the toolbar tone.
+

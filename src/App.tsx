@@ -4,6 +4,7 @@ import { ChordEditPage } from './components/ChordEditPage'
 import { ChordFinderSection } from './components/ChordFinderSection'
 import { RequireAdmin } from './components/RequireAdmin'
 import { ScoreCreatePage } from './components/ScoreCreatePage'
+import { ScorePreviewPopoutPage } from './components/ScorePreviewPopoutPage'
 import { TransposePage } from './components/TransposePage'
 import { useAdminAuth } from './hooks/useAdminAuth'
 import './App.css'
@@ -110,6 +111,7 @@ function AppLayout() {
 function App() {
   return (
     <Routes>
+      <Route path="sheet/create/preview-popout" element={<ScorePreviewPopoutPage />} />
       <Route element={<AppLayout />}>
         <Route index element={<ChordFinderSection />} />
         <Route path="finder" element={<ChordFinderSection />} />
