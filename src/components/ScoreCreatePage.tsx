@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type UIEvent,
+} from 'react'
 import {
   fetchMyScores,
   saveMyScore,
@@ -53,6 +60,10 @@ const INITIAL_DRAFT: ScoreDraft = {
   ],
 }
 const MAX_VERSES = 4
+const EDITOR_LINE_HEIGHT = 24
+const EDITOR_VERTICAL_PADDING = 20
+const PAIRED_EDITOR_VIEWPORT_PX = 268
+const PAIRED_EDITOR_MIN_DISPLAY_LINES = 12
 
 function createVerse(index: number, lyrics = ''): ScoreVerseDraft {
   return {
@@ -85,6 +96,11 @@ function parseLyricsLines(rawText: string): ParsedLyricLine[] {
 
 function parseRawLines(rawText: string): string[] {
   return rawText.split(/\r?\n/)
+}
+
+function countTextLines(rawText: string): number {
+  if (rawText.length === 0) return 1
+  return rawText.split(/\r?\n/).length
 }
 
 function splitMeasureToChordTokens(measureText: string): string[] {
@@ -231,6 +247,9 @@ export function ScoreCreatePage() {
   const [selectedUnknownChords, setSelectedUnknownChords] = useState<Set<string>>(() => new Set())
   const [showUnknownChordsBelowTitle, setShowUnknownChordsBelowTitle] = useState(false)
   const [unknownChordBodyMode, setUnknownChordBodyMode] = useState<UnknownChordBodyMode>('none')
+  const [pairedScrollTop, setPairedScrollTop] = useState(0)
+  const [pairedViewportHeight, setPairedViewportHeight] = useState(PAIRED_EDITOR_VIEWPORT_PX)
+  const pairedScrollRef = useRef<HTMLDivElement | null>(null)
 
   const verse1 = draft.verses[0]
   const activeVerses = draft.verses
@@ -328,6 +347,41 @@ export function ScoreCreatePage() {
   }, [selectedUnknownChordSymbolsOrdered])
 
   const hasVerse1Input = (verse1?.lyrics ?? '').trim().length > 0
+  const pairedEditorDisplayLineCount = useMemo(() => {
+    const lyricLines = countTextLines(verse1?.lyrics ?? '')
+    const chordLines = countTextLines(sharedChordText)
+    return Math.max(PAIRED_EDITOR_MIN_DISPLAY_LINES, lyricLines, chordLines)
+  }, [sharedChordText, verse1?.lyrics])
+  const pairedCompareInnerHeightPx = useMemo(
+    () =>
+      Math.max(
+        PAIRED_EDITOR_VIEWPORT_PX,
+        EDITOR_VERTICAL_PADDING + pairedEditorDisplayLineCount * EDITOR_LINE_HEIGHT,
+      ),
+    [pairedEditorDisplayLineCount],
+  )
+  const pairedEditorVisibleLineMeta = useMemo(() => {
+    const firstVisibleLine = Math.floor(pairedScrollTop / EDITOR_LINE_HEIGHT) + 1
+    const visibleViewportHeight = Math.max(1, pairedViewportHeight - EDITOR_VERTICAL_PADDING)
+    const visibleLineCount = Math.max(1, Math.ceil(visibleViewportHeight / EDITOR_LINE_HEIGHT))
+    const start = Math.min(firstVisibleLine, pairedEditorDisplayLineCount)
+    const end = Math.min(pairedEditorDisplayLineCount, start + visibleLineCount - 1)
+    const numbers = Array.from({ length: end - start + 1 }, (_, i) => start + i)
+    const offsetY = -(pairedScrollTop % EDITOR_LINE_HEIGHT)
+    return { numbers, offsetY }
+  }, [pairedScrollTop, pairedViewportHeight, pairedEditorDisplayLineCount])
+
+  useEffect(() => {
+    const el = pairedScrollRef.current
+    if (!el) return
+
+    const updateHeight = () => setPairedViewportHeight(el.clientHeight)
+    updateHeight()
+
+    const ro = new ResizeObserver(updateHeight)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   useEffect(() => {
     const allowed = new Set(usedChordSymbols)
@@ -490,6 +544,10 @@ export function ScoreCreatePage() {
       else next.add(symbol)
       return next
     })
+  }, [])
+
+  const onPairedEditorScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
+    setPairedScrollTop(event.currentTarget.scrollTop)
   }, [])
 
   const toggleBoolOnPrimary = useCallback(
@@ -797,33 +855,82 @@ export function ScoreCreatePage() {
         </div>
 
         {verse1 ? (
-          <div className="score-create-page__input-grid">
-            <div className="section-card score-create-page__verse">
-              <h2 className="chord-finder__heading">가사 입력</h2>
-              <div className="score-create-page__verse-list">
-                <label className="chord-edit__label" htmlFor={verse1.id}>
-                  <span className="chord-edit__label-text">{verse1.label} 가사</span>
-                  <textarea
-                    id={verse1.id}
-                    className="score-create-page__textarea"
-                    value={verse1.lyrics}
-                    onChange={(event) => updateVerseLyrics(verse1.id, event.target.value)}
-                    placeholder="가사를 여러 줄로 자유롭게 입력해 주세요."
-                    rows={10}
-                  />
-                </label>
+          <div className="section-card score-create-page__pair-editor-card">
+            <div className="score-create-page__pair-editor-head">
+              <h2 className="chord-finder__heading">가사 · 코드 입력</h2>
+              <button
+                type="button"
+                className="chord-edit__btn chord-edit__btn--secondary"
+                onClick={addVerse}
+                disabled={!canAddVerse}
+              >
+                절 추가
+              </button>
+            </div>
 
-                <div className="score-create-page__verse-add-row">
-                  <button
-                    type="button"
-                    className="chord-edit__btn chord-edit__btn--secondary"
-                    onClick={addVerse}
-                    disabled={!canAddVerse}
+            <div className="score-create-page__pair-editor-wrap score-create-page__pair-editor-wrap--compare">
+              <label className="chord-edit__label score-create-page__pair-editor-label" htmlFor={verse1.id}>
+                <span className="chord-edit__label-text">{verse1.label} 가사</span>
+              </label>
+              <label
+                className="chord-edit__label score-create-page__pair-editor-label"
+                htmlFor={`${verse1.id}-chords`}
+              >
+                <span className="chord-edit__label-text">공통 코드</span>
+              </label>
+
+              <div className="score-create-page__pair-compare-shell">
+                <div
+                  ref={pairedScrollRef}
+                  className="score-create-page__compare-scroll"
+                  onScroll={onPairedEditorScroll}
+                >
+                  <div
+                    className="score-create-page__compare-inner"
+                    style={{ height: `${pairedCompareInnerHeightPx}px` }}
                   >
-                    절 추가
-                  </button>
+                    <div className="score-create-page__compare-zebra" aria-hidden />
+                    <div className="score-create-page__compare-grid">
+                      <div className="score-create-page__line-gutter score-create-page__line-gutter--pair" aria-hidden="true">
+                        <div
+                          className="score-create-page__line-gutter-track score-create-page__line-gutter-track--pair"
+                          style={{ transform: `translateY(${pairedEditorVisibleLineMeta.offsetY}px)` }}
+                        >
+                          {pairedEditorVisibleLineMeta.numbers.map((lineNo) => (
+                            <span key={`lyric-line-${lineNo}`} className="score-create-page__line-no">
+                              {lineNo}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <textarea
+                        id={verse1.id}
+                        className="score-create-page__textarea score-create-page__textarea--pair-cell"
+                        value={verse1.lyrics}
+                        onChange={(event) => updateVerseLyrics(verse1.id, event.target.value)}
+                        placeholder="가사를 여러 줄로 자유롭게 입력해 주세요."
+                        wrap="off"
+                        rows={1}
+                        spellCheck
+                      />
+                      <textarea
+                        id={`${verse1.id}-chords`}
+                        className="score-create-page__textarea score-create-page__textarea--pair-cell score-create-page__textarea--pair-cell-chord"
+                        value={sharedChordText}
+                        onChange={(event) => setSharedChordText(event.target.value)}
+                        placeholder={`(예시) C G7 / Am Em7 / F\n(예시) C / F G7 / C`}
+                        wrap="off"
+                        rows={1}
+                        spellCheck={false}
+                      />
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </div>
 
+            {activeVerses.slice(1).length > 0 ? (
+              <div className="score-create-page__verse-list">
                 {activeVerses.slice(1).map((verse) => (
                   <label key={verse.id} className="chord-edit__label" htmlFor={verse.id}>
                     <span className="chord-edit__label-text">{verse.label} 가사</span>
@@ -838,23 +945,7 @@ export function ScoreCreatePage() {
                   </label>
                 ))}
               </div>
-            </div>
-
-            <div className="section-card score-create-page__code">
-              <h2 className="chord-finder__heading">코드 입력</h2>
-              <label className="chord-edit__label" htmlFor={`${verse1.id}-chords`}>
-                <span className="chord-edit__label-text">공통 코드</span>
-                <textarea
-                  id={`${verse1.id}-chords`}
-                  className="score-create-page__textarea score-create-page__textarea--code"
-                  value={sharedChordText}
-                  onChange={(event) => setSharedChordText(event.target.value)}
-                  placeholder={`(예시) C G7 / Am Em7 / F\n(예시) C / F G7 / C`}
-                  rows={10}
-                  spellCheck={false}
-                />
-              </label>
-            </div>
+            ) : null}
           </div>
         ) : null}
 

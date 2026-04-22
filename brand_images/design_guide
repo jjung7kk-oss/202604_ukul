@@ -885,3 +885,20 @@ Applies to the **악보 만들기** route when verse 1 input exists and preview 
 
 12. **Lower priority** — Ending bracket summaries live in a **collapsible** block at the bottom of the tool panel (e.g. `<details>` “적용된 구간”), not as a large always-open section. Keep list rows and remove buttons **compact** to match the toolbar tone.
 
+### Lyric / code paired editor UX (2026-04)
+
+13. **Line-by-line pairing is explicit** — The main lyric input (1절) and shared chord input must read as a **paired editor** where each line visually corresponds **1:1** by row height and alignment (implemented as one scroll surface + shared row rhythm, not two loosely coupled panes).
+14. **Vertical scroll is unified** — Use a **single** vertical scroll container for the paired surface; lyric and chord fields must not each own independent vertical scrolling that is later “synced” in JavaScript.
+15. **Alternating row background for line tracking** — Use subtle alternating row strips (white / very light blue) on a layer that **scrolls with the row grid**, not as a fixed viewport pattern behind moving text.
+16. **Line numbers are helper metadata** — Display weak line numbers as secondary guidance (primary in lyric-side gutter), not as dominant UI chrome.
+17. **Preview line numbers correspond to input lines** — Show light line numbers in preview rows too, so users can quickly map input line → preview line.
+18. **Editing surface tone** — The paired editor should feel like a practical compare/edit tool (tight spacing, clear row mapping), not two unrelated textareas placed side-by-side.
+19. **Visible-range line number policy** — Gutter line numbers must show only the lines currently visible in the viewport. Do not pre-render extra future numbers below the visible text area, even when trailing blank space exists.
+20. **Perceptually unified scroll** — The paired block must scroll as **one** editor surface with no lag between panes (prefer one outer scroller over JS-linked `textarea` scrollers).
+21. **Editing readability scale-up** — Increase paired-editor text size and line height versus earlier compact defaults so long editing sessions are less fatiguing.
+22. **Lyric-priority width split** — In paired mode, allocate more horizontal space to lyrics than chords (target about **6:4** to **7:3**), while preserving strict row-to-row alignment.
+23. **Row-bound zebra stripes** — Alternating row backgrounds must live in the **same scroll layer** as the editable text (e.g. a full-width stripe layer inside the scroll container), not as a `textarea` background that can desync from scrolling. Stripes move **with** the content so each row reads as one physical unit.
+24. **Zero cumulative line drift** — Lyrics and chords must share one **hard** vertical rhythm: identical `line-height`, vertical padding, font metrics (same family/size/weight in the pair surface), and one shared scroll context so baselines stay aligned through the **last** line with no “slow walk” error.
+25. **Single authoritative vertical scroll** — Do not rely on synchronizing `scrollTop` between two stacked `textarea` elements; use **one** outer `overflow-y: auto` and keep lyric/chord fields `overflow-y: hidden` so the UI scrolls as a **single** surface with no leading/lagging pane.
+26. **Row-first mental model** — The implementation should read as a **row-based compare grid** (line gutter + lyric cell + chord cell under one scroll), not as two independent editors that were visually nudged to match.
+

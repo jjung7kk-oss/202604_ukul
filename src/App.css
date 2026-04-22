@@ -986,8 +986,120 @@
 .score-create-page__input-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: 6px;
   align-items: start;
+}
+
+.score-create-page__pair-editor-card {
+  gap: var(--space-2);
+}
+
+.score-create-page__pair-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.score-create-page__pair-editor-head .chord-edit__btn {
+  min-height: 34px;
+  padding: 0 10px;
+  font: 600 12px/1.2 var(--font-family);
+}
+
+.score-create-page__pair-editor-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-bg-card);
+}
+
+.score-create-page__pair-editor-wrap--compare {
+  grid-template-rows: auto minmax(0, 268px);
+}
+
+.score-create-page__pair-editor-label {
+  padding: 6px 6px 0;
+  gap: 4px;
+  min-width: 0;
+}
+
+.score-create-page__pair-editor-label + .score-create-page__pair-editor-label {
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 84%, transparent);
+}
+
+.score-create-page__pair-compare-shell {
+  grid-column: 1 / -1;
+  min-width: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 84%, transparent);
+}
+
+.score-create-page__compare-scroll {
+  height: 268px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.score-create-page__compare-scroll:focus-within {
+  box-shadow: inset 0 0 0 1px rgba(47, 128, 237, 0.35);
+}
+
+.score-create-page__compare-inner {
+  --score-pair-line-height: 24px;
+  --score-pair-pad-y: 10px;
+  --score-pair-pad-x: 12px;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.score-create-page__compare-zebra {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent var(--score-pair-line-height),
+    rgba(47, 128, 237, 0.055) var(--score-pair-line-height),
+    rgba(47, 128, 237, 0.055) calc(var(--score-pair-line-height) * 2)
+  );
+  background-position: 0 var(--score-pair-pad-y);
+  background-repeat: repeat;
+}
+
+.score-create-page__compare-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1.75fr) minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 100%;
+  height: 100%;
+}
+
+.score-create-page__compare-grid > .score-create-page__textarea--pair-cell:last-of-type {
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 84%, transparent);
+}
+
+.score-create-page__pair-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 6px 0;
+}
+
+.score-create-page__pair-col + .score-create-page__pair-col {
+  border-left: 1px solid color-mix(in srgb, var(--color-border) 84%, transparent);
+}
+
+.score-create-page__pair-col .chord-edit__label {
+  gap: 4px;
 }
 
 .score-create-page__verse {
@@ -1032,6 +1144,102 @@
   line-height: 1.5;
   color: var(--color-text-main);
   background: var(--color-bg-card);
+}
+
+.score-create-page__paired-editor {
+  --score-editor-line-height: 24px;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  height: 268px;
+  align-items: stretch;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.score-create-page__pair-editor-wrap .score-create-page__paired-editor {
+  border: none;
+  border-radius: 0;
+}
+
+.score-create-page__line-gutter {
+  position: relative;
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-bg-card) 95%, #fff),
+    color-mix(in srgb, var(--color-bg-page) 88%, #fff)
+  );
+  border-right: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+  overflow: hidden;
+  user-select: none;
+}
+
+.score-create-page__line-gutter--pair {
+  border-right: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent);
+}
+
+.score-create-page__line-gutter-track {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 4px;
+}
+
+.score-create-page__line-gutter-track--pair {
+  padding: var(--score-pair-pad-y) 4px var(--score-pair-pad-y) 4px;
+}
+
+.score-create-page__line-no {
+  height: var(--score-editor-line-height);
+  text-align: right;
+  font: 500 12px/var(--score-editor-line-height) var(--font-family);
+  color: color-mix(in srgb, var(--color-text-sub) 62%, #94a3b8);
+}
+
+.score-create-page__compare-grid .score-create-page__line-no {
+  height: var(--score-pair-line-height);
+  font: 500 12px/var(--score-pair-line-height) var(--font-family);
+}
+
+.score-create-page__textarea--pair-cell {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  resize: none;
+  padding: var(--score-pair-pad-y) var(--score-pair-pad-x);
+  font: 500 15px/var(--score-pair-line-height) var(--font-family);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+  color: var(--color-text-main);
+  line-height: var(--score-pair-line-height);
+  background: transparent;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.score-create-page__textarea--pair-cell:focus {
+  outline: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.score-create-page__textarea--pair-cell-chord {
+  font: 500 15px/var(--score-pair-line-height) var(--font-family);
+}
+
+.score-create-page__textarea--pair-cell::placeholder {
+  color: color-mix(in srgb, var(--color-text-sub) 32%, transparent);
+  opacity: 1;
+}
+
+.score-create-page__paired-editor:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(47, 128, 237, 0.2);
 }
 
 .score-create-page__textarea:focus {
@@ -1213,6 +1421,9 @@
   background: #fff;
   color: var(--color-text-main);
   min-width: 0;
+  /* Chrome 인쇄/PDF에서 배경·채우기가 빠지지 않도록 */
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .score-preview__sheet-head + .score-preview__row-wrap {
@@ -1249,6 +1460,18 @@
   overflow-y: visible;
   min-width: 0;
   max-width: 100%;
+  padding-left: 24px;
+}
+
+.score-preview__row-index {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  min-width: 18px;
+  text-align: right;
+  font: 500 10px/1.2 var(--font-family);
+  color: color-mix(in srgb, var(--color-text-sub) 68%, #8ea0b7);
+  pointer-events: none;
 }
 
 .score-preview__volta-layer {
@@ -1335,7 +1558,7 @@
   pointer-events: none;
 }
 
-/* 되돌이표: 가로 마디선 중앙에 맞춤(눈금과 동일 높이감) */
+/* 되돌이표: 가로 마디선 중앙에 맞춤(SVG 벡터 — 인쇄/PDF에서도 유지) */
 .score-preview__repeat-sign {
   position: absolute;
   top: 50%;
@@ -1343,7 +1566,6 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 3px;
   height: 18px;
   z-index: 2;
   pointer-events: none;
@@ -1359,39 +1581,13 @@
   flex-direction: row;
 }
 
-.score-preview__repeat-line {
+.score-preview__repeat-svg {
+  display: block;
   flex-shrink: 0;
-  align-self: stretch;
-  min-height: 18px;
-  border-radius: 0.5px;
-  background: #050505;
-}
-
-.score-preview__repeat-line--heavy {
-  width: 4px;
-  min-height: 18px;
-}
-
-.score-preview__repeat-line--thin {
-  width: 2px;
-  min-height: 16px;
-  opacity: 1;
-}
-
-.score-preview__repeat-dots {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 14px;
-  padding: 0;
-  flex-shrink: 0;
-}
-
-.score-preview__repeat-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: #050505;
+  width: 20px;
+  height: 18px;
+  overflow: visible;
+  shape-rendering: geometricPrecision;
 }
 
 /* 코다: 마디 왼쪽 구분선(눈금) 바로 위 */
@@ -1568,28 +1764,19 @@
   right: 0;
   top: 50%;
   height: 0;
-  border-top: 1.5px solid #111;
+  /* 1px hairline은 PDF에서 자주 소실됨 */
+  border-top: 2px solid #111;
   transform: translateY(-50%);
 }
 
-.score-preview__staff-tick {
+/* 마디 세로선: SVG(최소 3px 굵기) + 중앙 정렬로 퍼센트 위치에서도 인쇄 안정 */
+.score-preview__staff-tick-svg {
   position: absolute;
   top: 50%;
-  width: 1px;
-  height: 16px;
-  margin-left: -0.5px;
-  background: #111;
-  transform: translateY(-50%);
-}
-
-.score-preview__staff-tick--start {
-  width: 2px;
-  margin-left: -1px;
-}
-
-.score-preview__staff-tick--end {
-  width: 2px;
-  margin-left: -1px;
+  display: block;
+  overflow: visible;
+  transform: translate(-50%, -50%);
+  shape-rendering: crispEdges;
 }
 
 .score-preview__sign-slot {
@@ -1725,6 +1912,21 @@
 
 .score-preview__brand-footer-text {
   letter-spacing: 0.01em;
+}
+
+/* Chrome Ctrl+P → PDF: 배경·SVG 채우기 유지, 얇은 레이어 클리핑 완화 */
+@media print {
+  .score-preview,
+  .score-preview svg {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .score-preview__staff,
+  .score-preview__staff-seg,
+  .score-preview__sheet {
+    overflow: visible !important;
+  }
 }
 
 .score-preview__chord-track {
@@ -2016,12 +2218,61 @@
     grid-template-columns: 1fr;
   }
 
+  .score-create-page__pair-editor-wrap {
+    grid-template-columns: 1fr;
+  }
+
+  .score-create-page__pair-editor-wrap--compare {
+    grid-template-rows: auto auto minmax(0, 236px);
+  }
+
+  .score-create-page__pair-editor-label + .score-create-page__pair-editor-label {
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--color-border) 84%, transparent);
+  }
+
+  .score-create-page__pair-col + .score-create-page__pair-col {
+    border-left: 0;
+    border-top: 1px solid color-mix(in srgb, var(--color-border) 84%, transparent);
+  }
+
+  .score-create-page__paired-editor {
+    grid-template-columns: 28px minmax(0, 1fr);
+    height: 236px;
+  }
+
+  .score-create-page__line-gutter-track {
+    padding: 9px 4px;
+  }
+
+  .score-create-page__compare-scroll {
+    height: 236px;
+  }
+
+  .score-create-page__compare-inner {
+    --score-pair-pad-y: 9px;
+  }
+
+  .score-create-page__compare-grid {
+    grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr);
+  }
+
   .score-preview__sheet-head + .score-preview__row-wrap {
     margin-top: var(--space-4);
   }
 
   .score-preview__row-wrap + .score-preview__row-wrap {
     margin-top: calc(var(--space-3) / 4);
+  }
+
+  .score-preview__row-wrap {
+    padding-left: 20px;
+  }
+
+  .score-preview__row-index {
+    top: 9px;
+    min-width: 15px;
+    font-size: 9px;
   }
 
   .score-preview {

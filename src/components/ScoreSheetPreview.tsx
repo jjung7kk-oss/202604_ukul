@@ -33,15 +33,22 @@ export type PreviewLine = {
 const U_SEGNO = '\u{1D10B}'
 const U_CODA = '\u{1D10C}'
 
+/** 인쇄·PDF에서도 사라지지 않도록 벡터(SVG)로 그림 */
 function RepeatStartSign() {
   return (
     <span className="score-preview__repeat-sign score-preview__repeat-sign--start" aria-label="되돌이표 시작">
-      <span className="score-preview__repeat-line score-preview__repeat-line--heavy" aria-hidden="true" />
-      <span className="score-preview__repeat-line score-preview__repeat-line--thin" aria-hidden="true" />
-      <span className="score-preview__repeat-dots" aria-hidden="true">
-        <span className="score-preview__repeat-dot" />
-        <span className="score-preview__repeat-dot" />
-      </span>
+      <svg
+        className="score-preview__repeat-svg"
+        width="20"
+        height="18"
+        viewBox="0 0 20 18"
+        aria-hidden="true"
+      >
+        <rect x="0.5" y="0.5" width="3.5" height="17" fill="#050505" />
+        <rect x="5.5" y="1.25" width="1.75" height="15.5" fill="#050505" />
+        <circle cx="11.5" cy="5.5" r="1.65" fill="#050505" />
+        <circle cx="11.5" cy="12.5" r="1.65" fill="#050505" />
+      </svg>
     </span>
   )
 }
@@ -49,13 +56,45 @@ function RepeatStartSign() {
 function RepeatEndSign() {
   return (
     <span className="score-preview__repeat-sign score-preview__repeat-sign--end" aria-label="되돌이표 끝">
-      <span className="score-preview__repeat-dots" aria-hidden="true">
-        <span className="score-preview__repeat-dot" />
-        <span className="score-preview__repeat-dot" />
-      </span>
-      <span className="score-preview__repeat-line score-preview__repeat-line--thin" aria-hidden="true" />
-      <span className="score-preview__repeat-line score-preview__repeat-line--heavy" aria-hidden="true" />
+      <svg
+        className="score-preview__repeat-svg"
+        width="20"
+        height="18"
+        viewBox="0 0 20 18"
+        aria-hidden="true"
+      >
+        <circle cx="8.5" cy="5.5" r="1.65" fill="#050505" />
+        <circle cx="8.5" cy="12.5" r="1.65" fill="#050505" />
+        <rect x="12.75" y="1.25" width="1.75" height="15.5" fill="#050505" />
+        <rect x="15.5" y="0.5" width="3.5" height="17" fill="#050505" />
+      </svg>
     </span>
+  )
+}
+
+function StaffMeasureTick({
+  leftPct,
+  tickKind,
+}: {
+  leftPct: number
+  tickKind: 'inner' | 'start' | 'end'
+}) {
+  const thick = tickKind !== 'inner'
+  return (
+    <svg
+      className="score-preview__staff-tick-svg"
+      style={{ left: `${leftPct}%` }}
+      width={thick ? 5 : 4}
+      height="18"
+      viewBox={thick ? '0 0 5 18' : '0 0 4 18'}
+      aria-hidden="true"
+    >
+      {thick ? (
+        <rect x="0.75" y="1" width="3.5" height="16" fill="#111" />
+      ) : (
+        <rect x="0.5" y="1" width="3" height="16" fill="#111" />
+      )}
+    </svg>
   )
 }
 
@@ -223,6 +262,13 @@ export function ScoreSheetPreview({
       {lines.map((line) => {
         const measureCount = line.measures.length > 0 ? line.measures.length : 1
         const voltaForLine = notation.endings.filter((e) => e.lineIndex === line.lineIndex)
+        const repeatBoundaryTicks = new Set<number>()
+        line.measures.forEach((_, measureIndex) => {
+          const measureKey = makeMeasureKey(line.lineIndex, measureIndex)
+          const meta = notation.measures[measureKey]
+          if (meta?.repeatStart) repeatBoundaryTicks.add(measureIndex)
+          if (meta?.repeatEnd) repeatBoundaryTicks.add(measureIndex + 1)
+        })
         const sheetGridStyle = {
           '--measure-count': String(measureCount),
           gridTemplateColumns: `repeat(${measureCount}, minmax(0, 1fr))`,
@@ -234,6 +280,9 @@ export function ScoreSheetPreview({
             className="score-preview__row-wrap"
             aria-label={`${line.lineIndex + 1}번째 줄`}
           >
+            <span className="score-preview__row-index" aria-hidden="true">
+              {line.lineIndex + 1}
+            </span>
             {voltaForLine.length > 0 ? (
               <div
                 className="score-preview__volta-layer"
@@ -389,14 +438,19 @@ export function ScoreSheetPreview({
                     style={{ gridColumn: '1 / -1', gridRow: 2 }}
                   >
                     <div className="score-preview__staff-hline" aria-hidden="true" />
-                    {Array.from({ length: measureCount + 1 }, (_, tickIndex) => (
-                      <span
-                        key={`${line.id}-tick-${tickIndex}`}
-                        className={`score-preview__staff-tick${tickIndex === 0 ? ' score-preview__staff-tick--start' : ''}${tickIndex === measureCount ? ' score-preview__staff-tick--end' : ''}`}
-                        style={{ left: `${(100 * tickIndex) / measureCount}%` }}
-                        aria-hidden="true"
-                      />
-                    ))}
+                    {Array.from({ length: measureCount + 1 }, (_, tickIndex) => {
+                      if (repeatBoundaryTicks.has(tickIndex)) return null
+                      const leftPct = (100 * tickIndex) / measureCount
+                      const tickKind =
+                        tickIndex === 0 ? 'start' : tickIndex === measureCount ? 'end' : 'inner'
+                      return (
+                        <StaffMeasureTick
+                          key={`${line.id}-tick-${tickIndex}`}
+                          leftPct={leftPct}
+                          tickKind={tickKind}
+                        />
+                      )
+                    })}
                   </div>
                   {line.measures.map((measure, measureIndex) => {
                     const b = measureBlock(line.lineIndex, measureIndex)
@@ -487,16 +541,8 @@ export function ScoreSheetPreview({
                     style={{ gridColumn: '1 / -1', gridRow: 2 }}
                   >
                     <div className="score-preview__staff-hline" aria-hidden="true" />
-                    <span
-                      className="score-preview__staff-tick score-preview__staff-tick--start"
-                      style={{ left: '0%' }}
-                      aria-hidden="true"
-                    />
-                    <span
-                      className="score-preview__staff-tick score-preview__staff-tick--end"
-                      style={{ left: '100%' }}
-                      aria-hidden="true"
-                    />
+                    <StaffMeasureTick leftPct={0} tickKind="start" />
+                    <StaffMeasureTick leftPct={100} tickKind="end" />
                   </div>
                   <div
                     className="score-preview__sheet-cell score-preview__sheet-cell--lyrics"
