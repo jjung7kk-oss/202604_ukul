@@ -283,6 +283,7 @@ export function ScoreSheetPreview({
             <span className="score-preview__row-index" aria-hidden="true">
               {line.lineIndex + 1}
             </span>
+            <div className="score-preview__staff-line">
             {voltaForLine.length > 0 ? (
               <div
                 className="score-preview__volta-layer"
@@ -326,8 +327,8 @@ export function ScoreSheetPreview({
             ) : null}
             <div
               className={`score-preview__sheet${line.measures.length === 0 ? ' score-preview__sheet--empty' : ''}`}
-              style={sheetGridStyle}
             >
+              <div className="score-preview__sheet-inner" style={sheetGridStyle}>
               {line.measures.length > 0 ? (
                 <>
                   {line.measures.map((measure, measureIndex) => {
@@ -562,6 +563,8 @@ export function ScoreSheetPreview({
                   </div>
                 </>
               )}
+              </div>
+            </div>
             </div>
           </div>
         )

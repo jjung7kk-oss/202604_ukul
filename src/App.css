@@ -1463,6 +1463,15 @@
   padding-left: 24px;
 }
 
+/* 1·2번 반복 괄호 + 악보 그리드: 인쇄 시 한 줄 단위로 묶기 위한 래퍼 */
+.score-preview__staff-line {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
 .score-preview__row-index {
   position: absolute;
   left: 0;
@@ -1671,15 +1680,22 @@
   letter-spacing: 0.01em;
 }
 
-/* 한 줄 악보: 코드 행 → 공통 가로선 → 짧은 세로 눈금 → 가사 */
+/* 한 줄 악보: 바깥은 래퍼, 실제 격자는 .score-preview__sheet-inner (인쇄 시 줄 단위 분리 방지) */
 .score-preview__sheet {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  margin-bottom: 0;
+  overflow: visible;
+}
+
+.score-preview__sheet-inner {
   display: grid;
   grid-template-rows: auto 22px auto auto;
   align-items: stretch;
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  margin-bottom: 0;
   overflow: visible;
 }
 
@@ -1924,8 +1940,41 @@
 
   .score-preview__staff,
   .score-preview__staff-seg,
-  .score-preview__sheet {
+  .score-preview__sheet,
+  .score-preview__sheet-inner {
     overflow: visible !important;
+  }
+
+  /* 제목·머리말이 첫 악보 줄과 어색하게 끊기지 않도록 */
+  .score-preview__sheet-head {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .score-preview__unknown-band {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* 한 줄 = 코드 + 위쪽 기호 + 마디선 + 가사 + 아래 진행 기호 (+ volta) */
+  .score-preview__row-wrap,
+  .score-preview__staff-line,
+  .score-preview__sheet,
+  .score-preview__sheet-inner {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  .score-preview__volta-layer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .score-preview__brand-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 }
 

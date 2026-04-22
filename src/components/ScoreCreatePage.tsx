@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type UIEvent,
-} from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   fetchMyScores,
   saveMyScore,
@@ -247,9 +240,6 @@ export function ScoreCreatePage() {
   const [selectedUnknownChords, setSelectedUnknownChords] = useState<Set<string>>(() => new Set())
   const [showUnknownChordsBelowTitle, setShowUnknownChordsBelowTitle] = useState(false)
   const [unknownChordBodyMode, setUnknownChordBodyMode] = useState<UnknownChordBodyMode>('none')
-  const [pairedScrollTop, setPairedScrollTop] = useState(0)
-  const [pairedViewportHeight, setPairedViewportHeight] = useState(PAIRED_EDITOR_VIEWPORT_PX)
-  const pairedScrollRef = useRef<HTMLDivElement | null>(null)
 
   const verse1 = draft.verses[0]
   const activeVerses = draft.verses
@@ -360,28 +350,10 @@ export function ScoreCreatePage() {
       ),
     [pairedEditorDisplayLineCount],
   )
-  const pairedEditorVisibleLineMeta = useMemo(() => {
-    const firstVisibleLine = Math.floor(pairedScrollTop / EDITOR_LINE_HEIGHT) + 1
-    const visibleViewportHeight = Math.max(1, pairedViewportHeight - EDITOR_VERTICAL_PADDING)
-    const visibleLineCount = Math.max(1, Math.ceil(visibleViewportHeight / EDITOR_LINE_HEIGHT))
-    const start = Math.min(firstVisibleLine, pairedEditorDisplayLineCount)
-    const end = Math.min(pairedEditorDisplayLineCount, start + visibleLineCount - 1)
-    const numbers = Array.from({ length: end - start + 1 }, (_, i) => start + i)
-    const offsetY = -(pairedScrollTop % EDITOR_LINE_HEIGHT)
-    return { numbers, offsetY }
-  }, [pairedScrollTop, pairedViewportHeight, pairedEditorDisplayLineCount])
-
-  useEffect(() => {
-    const el = pairedScrollRef.current
-    if (!el) return
-
-    const updateHeight = () => setPairedViewportHeight(el.clientHeight)
-    updateHeight()
-
-    const ro = new ResizeObserver(updateHeight)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
+  const pairedEditorDocumentLineNumbers = useMemo(
+    () => Array.from({ length: pairedEditorDisplayLineCount }, (_, i) => i + 1),
+    [pairedEditorDisplayLineCount],
+  )
 
   useEffect(() => {
     const allowed = new Set(usedChordSymbols)
@@ -544,10 +516,6 @@ export function ScoreCreatePage() {
       else next.add(symbol)
       return next
     })
-  }, [])
-
-  const onPairedEditorScroll = useCallback((event: UIEvent<HTMLDivElement>) => {
-    setPairedScrollTop(event.currentTarget.scrollTop)
   }, [])
 
   const toggleBoolOnPrimary = useCallback(
@@ -880,11 +848,7 @@ export function ScoreCreatePage() {
               </label>
 
               <div className="score-create-page__pair-compare-shell">
-                <div
-                  ref={pairedScrollRef}
-                  className="score-create-page__compare-scroll"
-                  onScroll={onPairedEditorScroll}
-                >
+                <div className="score-create-page__compare-scroll">
                   <div
                     className="score-create-page__compare-inner"
                     style={{ height: `${pairedCompareInnerHeightPx}px` }}
@@ -892,11 +856,8 @@ export function ScoreCreatePage() {
                     <div className="score-create-page__compare-zebra" aria-hidden />
                     <div className="score-create-page__compare-grid">
                       <div className="score-create-page__line-gutter score-create-page__line-gutter--pair" aria-hidden="true">
-                        <div
-                          className="score-create-page__line-gutter-track score-create-page__line-gutter-track--pair"
-                          style={{ transform: `translateY(${pairedEditorVisibleLineMeta.offsetY}px)` }}
-                        >
-                          {pairedEditorVisibleLineMeta.numbers.map((lineNo) => (
+                        <div className="score-create-page__line-gutter-track score-create-page__line-gutter-track--pair">
+                          {pairedEditorDocumentLineNumbers.map((lineNo) => (
                             <span key={`lyric-line-${lineNo}`} className="score-create-page__line-no">
                               {lineNo}
                             </span>
