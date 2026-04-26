@@ -4,6 +4,7 @@ export const SCORE_PREVIEW_POPOUT_STORAGE_KEY = 'ukul-score-preview-popout-v1'
 export type ScorePreviewPopoutStoredV1 = {
   v: 1
   title: string
+  artist?: string
   lines: unknown
   notation: unknown
   selectedUnknownChords?: unknown

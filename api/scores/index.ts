@@ -46,6 +46,7 @@ function requireUserId(req: VercelRequest, res: VercelResponse): string | null {
 function mapScore(score: {
   id: string
   title: string
+  artist: string
   sharedChordText: string
   notation: unknown
   createdAt: Date
@@ -55,6 +56,7 @@ function mapScore(score: {
   return {
     id: score.id,
     title: score.title,
+    artist: score.artist,
     sharedChordText: score.sharedChordText,
     notation: score.notation,
     createdAt: score.createdAt.toISOString(),
@@ -97,6 +99,7 @@ export default async function handler(
     if (!userId) return
     const body = parseBody(req)
     const title = typeof body?.title === 'string' ? body.title : ''
+    const artist = typeof body?.artist === 'string' ? body.artist : ''
     const sharedChordText =
       typeof body?.sharedChordText === 'string' ? body.sharedChordText : ''
     const rawScoreId = body?.scoreId
@@ -127,6 +130,7 @@ export default async function handler(
         scoreId,
         userId,
         title,
+        artist,
         sharedChordText,
         notation: body?.notation,
         verses,

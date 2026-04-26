@@ -152,6 +152,7 @@ app.get('/api/scores', async (req, res) => {
       scores: scores.map((score) => ({
         id: score.id,
         title: score.title,
+        artist: score.artist,
         sharedChordText: score.sharedChordText,
         notation: score.notation,
         createdAt: score.createdAt.toISOString(),
@@ -176,6 +177,7 @@ app.post('/api/scores', async (req, res) => {
   const body = req.body as {
     scoreId?: unknown
     title?: unknown
+    artist?: unknown
     sharedChordText?: unknown
     notation?: unknown
     verses?: unknown
@@ -186,6 +188,7 @@ app.post('/api/scores', async (req, res) => {
       ? rawScoreId.trim()
       : undefined
   const title = typeof body.title === 'string' ? body.title : ''
+  const artist = typeof body.artist === 'string' ? body.artist : ''
   const sharedChordText =
     typeof body.sharedChordText === 'string' ? body.sharedChordText : ''
   const verses = Array.isArray(body.verses)
@@ -206,6 +209,7 @@ app.post('/api/scores', async (req, res) => {
       scoreId,
       userId,
       title,
+      artist,
       sharedChordText,
       notation: body.notation,
       verses,
@@ -214,6 +218,7 @@ app.post('/api/scores', async (req, res) => {
       score: {
         id: score.id,
         title: score.title,
+        artist: score.artist,
         sharedChordText: score.sharedChordText,
         notation: score.notation,
         createdAt: score.createdAt.toISOString(),

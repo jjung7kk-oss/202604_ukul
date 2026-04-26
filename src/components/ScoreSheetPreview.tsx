@@ -152,8 +152,8 @@ function LyricFitText({
     const el = ref.current
     if (!el) return
     const fit = (): void => {
-      const maxPx = 14
-      const minPx = 8.5
+      const maxPx = 15
+      const minPx = 9
       if (!displayText.trim()) {
         el.style.fontSize = ''
         return
@@ -197,6 +197,7 @@ function LyricFitText({
 
 export type ScoreSheetPreviewProps = {
   title: string
+  artist?: string
   lines: PreviewLine[]
   notation: ScoreNotationState
   unknownChordShapes?: ReadonlyMap<string, ChordShape>
@@ -209,6 +210,7 @@ export type ScoreSheetPreviewProps = {
 
 export function ScoreSheetPreview({
   title,
+  artist = '',
   lines,
   notation,
   unknownChordShapes = new Map<string, ChordShape>(),
@@ -246,6 +248,9 @@ export function ScoreSheetPreview({
     >
       <header className="score-preview__sheet-head">
         <h3 className="score-preview__sheet-title">{title}</h3>
+        {artist.trim().length > 0 ? (
+          <p className="score-preview__sheet-artist">{artist.trim()}</p>
+        ) : null}
       </header>
       {showUnknownChordsBelowTitle && unknownChordShapes.size > 0 ? (
         <section className="score-preview__unknown-band" aria-label="모르는 코드 운지">

@@ -15,6 +15,7 @@ function coerceLines(raw: unknown): PreviewLine[] {
 
 export function ScorePreviewPopoutPage() {
   const [title, setTitle] = useState('미리보기')
+  const [artist, setArtist] = useState('')
   const [lines, setLines] = useState<PreviewLine[]>([])
   const [notation, setNotation] = useState<ScoreNotationState>(() =>
     parseScoreNotation(null),
@@ -43,6 +44,7 @@ export function ScorePreviewPopoutPage() {
           ? parsed.title.trim()
           : '곡 제목'
       setTitle(nextTitle)
+      setArtist(typeof parsed.artist === 'string' ? parsed.artist.trim() : '')
       setLines(coerceLines(parsed.lines))
       setNotation(parseScoreNotation(parsed.notation))
       setSelectedUnknownChords(
@@ -84,6 +86,7 @@ export function ScorePreviewPopoutPage() {
       {loaded && !empty ? (
         <ScoreSheetPreview
           title={title}
+          artist={artist}
           lines={lines}
           notation={notation}
           unknownChordShapes={unknownChordShapeMap}

@@ -12,6 +12,7 @@ export type SaveScoreInput = {
   scoreId?: string
   userId: string
   title: string
+  artist: string
   sharedChordText: string
   verses: ScoreVerseInput[]
   /** 악보 기호(JSON 객체). 생략 시 기존 악보는 필드 유지 */
@@ -22,6 +23,7 @@ export type StoredScore = {
   id: string
   userId: string
   title: string
+  artist: string
   sharedChordText: string
   notation: Prisma.JsonValue
   createdAt: Date
@@ -74,6 +76,7 @@ function shapeScore(score: {
   id: string
   userId: string
   title: string
+  artist: string
   sharedChordText: string
   notation: Prisma.JsonValue
   createdAt: Date
@@ -104,6 +107,7 @@ export async function saveScore(input: SaveScoreInput) {
   if (!title) {
     throw new ScoreServiceError('BAD_REQUEST', '제목을 입력해 주세요.')
   }
+  const artist = input.artist.trim()
   const normalizedVerses = normalizeVerses(input.verses)
   if (normalizedVerses.length === 0) {
     throw new ScoreServiceError('BAD_REQUEST', '최소 1개의 절이 필요합니다.')
@@ -132,6 +136,7 @@ export async function saveScore(input: SaveScoreInput) {
         where: { id: input.scoreId },
         data: {
           title,
+          artist,
           sharedChordText,
           ...(notationUpdate !== undefined ? { notation: notationUpdate } : {}),
         },
@@ -161,6 +166,7 @@ export async function saveScore(input: SaveScoreInput) {
     data: {
       userId: input.userId,
       title,
+      artist,
       sharedChordText,
       notation: notationUpdate ?? {},
       verses: {

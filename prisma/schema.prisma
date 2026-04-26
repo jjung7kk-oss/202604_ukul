@@ -23,6 +23,7 @@ model Score {
   id              String       @id @default(cuid())
   userId          String
   title           String
+  artist          String       @default("")
   sharedChordText String       @default("")
   notation        Json         @default("{}")
   createdAt       DateTime     @default(now())

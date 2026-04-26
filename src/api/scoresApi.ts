@@ -10,6 +10,7 @@ export type ScoreVerseDto = {
 export type ScoreDto = {
   id: string
   title: string
+  artist: string
   sharedChordText: string
   notation?: unknown
   createdAt: string
@@ -20,6 +21,7 @@ export type ScoreDto = {
 export type SaveScorePayload = {
   scoreId?: string | null
   title: string
+  artist: string
   sharedChordText: string
   notation?: unknown
   verses: { label: string; lyrics: string }[]

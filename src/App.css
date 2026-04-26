@@ -937,6 +937,12 @@
   gap: var(--space-2);
 }
 
+.score-create-page__title-artist-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr);
+  gap: var(--space-2);
+}
+
 .score-create-page__saved-list {
   gap: var(--space-2);
 }
@@ -1056,6 +1062,14 @@
   box-sizing: border-box;
 }
 
+.score-create-page__compare-inner--has-selected-line .score-create-page__line-gutter {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-bg-card) 95%, #fff),
+    color-mix(in srgb, var(--color-bg-page) 86%, #fff)
+  );
+}
+
 .score-create-page__compare-zebra {
   position: absolute;
   inset: 0;
@@ -1113,6 +1127,44 @@
   gap: var(--space-2);
 }
 
+.score-create-page__verse-label {
+  gap: var(--space-2);
+}
+
+.score-create-page__verse-label-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.score-create-page__verse-remove-btn {
+  min-height: 30px;
+  padding: 0 10px;
+  font: 600 12px/1.2 var(--font-family);
+}
+
+.score-create-page__verse-editor-shell {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--color-bg-card);
+}
+
+.score-create-page__compare-scroll--verse {
+  height: 268px;
+}
+
+.score-create-page__single-editor-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: stretch;
+  min-height: 100%;
+  height: 100%;
+}
+
 .score-create-page__verse-add-row {
   display: flex;
   justify-content: flex-start;
@@ -1144,6 +1196,10 @@
   line-height: 1.5;
   color: var(--color-text-main);
   background: var(--color-bg-card);
+}
+
+.score-create-page__textarea--verse-lyrics {
+  font: 500 15px/24px var(--font-family);
 }
 
 .score-create-page__paired-editor {
@@ -1200,6 +1256,11 @@
   font: 500 12px/var(--score-pair-line-height) var(--font-family);
 }
 
+.score-create-page__single-editor-grid .score-create-page__line-no {
+  height: var(--score-pair-line-height);
+  font: 500 12px/var(--score-pair-line-height) var(--font-family);
+}
+
 .score-create-page__textarea--pair-cell {
   box-sizing: border-box;
   min-width: 0;
@@ -1222,10 +1283,46 @@
   tab-size: 2;
 }
 
+.score-create-page__pair-cell-stack {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.score-create-page__textarea-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: clip;
+  pointer-events: none;
+  user-select: none;
+}
+
+.score-create-page__overlay-line-highlight {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--score-pair-line-height);
+  background: rgba(170, 154, 210, 0.24);
+}
+
+.score-create-page__measure-hint {
+  position: absolute;
+  border-radius: 3px;
+  background: rgba(188, 175, 220, 0.24);
+  box-shadow: inset 0 -1px 0 rgba(118, 98, 163, 0.42);
+}
+
 .score-create-page__textarea--pair-cell:focus {
   outline: none;
   border-color: transparent;
   box-shadow: none;
+}
+
+.score-create-page__pair-cell-stack .score-create-page__textarea--pair-cell {
+  position: relative;
+  z-index: 2;
 }
 
 .score-create-page__textarea--pair-cell-chord {
@@ -1281,7 +1378,7 @@
 
 .score-create-page__unknown-tool {
   gap: var(--space-2);
-  margin-bottom: var(--space-1);
+  margin-top: var(--space-1);
 }
 
 .score-create-page__unknown-empty {
@@ -1347,6 +1444,8 @@
 
 .score-create-page__preview-main {
   min-width: 0;
+  display: flex;
+  justify-content: center;
 }
 
 /* 태블릿: 미리보기+기호를 한 덩어리 작업 영역으로, 페이지 무한 연장 방지 */
@@ -1409,6 +1508,7 @@
 }
 
 .score-preview {
+  --score-a4-content-width: calc(210mm - 24mm);
   --sheet-inline-pad: 10px;
   --score-symbol-color: #6f7a8c;
   --score-symbol-color-strong: #5a6374;
@@ -1421,6 +1521,8 @@
   background: #fff;
   color: var(--color-text-main);
   min-width: 0;
+  width: min(100%, var(--score-a4-content-width));
+  margin-inline: auto;
   /* Chrome 인쇄/PDF에서 배경·채우기가 빠지지 않도록 */
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
@@ -1452,6 +1554,13 @@
   font: 800 clamp(1.35rem, 3.2vw, 1.85rem) / 1.15 var(--font-family);
   letter-spacing: -0.03em;
   color: #111;
+}
+
+.score-preview__sheet-artist {
+  margin: 6px 0 0;
+  font: 600 clamp(0.86rem, 1.7vw, 0.96rem) / 1.2 var(--font-family);
+  color: color-mix(in srgb, #111 72%, #5f5f5f);
+  text-align: right;
 }
 
 .score-preview__row-wrap {
@@ -1932,10 +2041,20 @@
 
 /* Chrome Ctrl+P → PDF: 배경·SVG 채우기 유지, 얇은 레이어 클리핑 완화 */
 @media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm;
+  }
+
   .score-preview,
   .score-preview svg {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  .score-preview {
+    width: var(--score-a4-content-width) !important;
+    max-width: var(--score-a4-content-width) !important;
   }
 
   .score-preview__staff,
@@ -1990,7 +2109,7 @@
   min-height: 26px;
   min-width: 0;
   padding: 4px 0 2px;
-  font: 500 clamp(0.8rem, 1.5vw, 0.92rem) / 1.5 var(--font-family);
+  font: 500 clamp(0.86rem, 1.6vw, 0.98rem) / 1.5 var(--font-family);
   color: #2a2a2a;
   overflow: hidden;
 }
@@ -2006,7 +2125,7 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  white-space: nowrap;
+  white-space: pre;
   overflow: hidden;
   font-weight: 500;
   line-height: 1.5;
@@ -2271,6 +2390,10 @@
     grid-template-columns: 1fr;
   }
 
+  .score-create-page__title-artist-row {
+    grid-template-columns: 1fr;
+  }
+
   .score-create-page__pair-editor-wrap--compare {
     grid-template-rows: auto auto minmax(0, 236px);
   }
@@ -2298,12 +2421,20 @@
     height: 236px;
   }
 
+  .score-create-page__compare-scroll--verse {
+    height: 236px;
+  }
+
   .score-create-page__compare-inner {
     --score-pair-pad-y: 9px;
   }
 
   .score-create-page__compare-grid {
     grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .score-create-page__single-editor-grid {
+    grid-template-columns: 28px minmax(0, 1fr);
   }
 
   .score-preview__sheet-head + .score-preview__row-wrap {
