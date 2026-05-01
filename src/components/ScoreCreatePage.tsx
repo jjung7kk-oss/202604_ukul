@@ -231,6 +231,44 @@ function rangeFromSelection(
 
 type BoolMarkKey = 'repeatStart' | 'repeatEnd' | 'segno' | 'coda' | 'toCoda' | 'fine'
 type UnknownChordBodyMode = 'none' | 'first' | 'all'
+type UnknownChordDisplayPrefs = {
+  selectedUnknownChords: string[]
+  showUnknownChordsBelowTitle: boolean
+  unknownChordBodyMode: UnknownChordBodyMode
+}
+
+function coerceUnknownChordBodyMode(raw: unknown): UnknownChordBodyMode {
+  return raw === 'first' || raw === 'all' ? raw : 'none'
+}
+
+function readUnknownChordDisplayPrefs(rawNotation: unknown): UnknownChordDisplayPrefs {
+  if (!rawNotation || typeof rawNotation !== 'object') {
+    return {
+      selectedUnknownChords: [],
+      showUnknownChordsBelowTitle: false,
+      unknownChordBodyMode: 'none',
+    }
+  }
+  const root = rawNotation as Record<string, unknown>
+  const rawPrefs =
+    root.unknownChordDisplay && typeof root.unknownChordDisplay === 'object'
+      ? (root.unknownChordDisplay as Record<string, unknown>)
+      : null
+  if (!rawPrefs) {
+    return {
+      selectedUnknownChords: [],
+      showUnknownChordsBelowTitle: false,
+      unknownChordBodyMode: 'none',
+    }
+  }
+  return {
+    selectedUnknownChords: Array.isArray(rawPrefs.selectedUnknownChords)
+      ? rawPrefs.selectedUnknownChords.filter((v): v is string => typeof v === 'string')
+      : [],
+    showUnknownChordsBelowTitle: rawPrefs.showUnknownChordsBelowTitle === true,
+    unknownChordBodyMode: coerceUnknownChordBodyMode(rawPrefs.unknownChordBodyMode),
+  }
+}
 
 function flipBoolMeasureField(
   entry: MeasureNotation | undefined,
@@ -721,6 +759,7 @@ export function ScoreCreatePage() {
   }, [])
 
   const applyLoadedScore = (score: ScoreDto): void => {
+    const unknownDisplayPrefs = readUnknownChordDisplayPrefs(score.notation)
     setCurrentScoreId(score.id)
     setTitle(score.title)
     setArtist(score.artist ?? '')
@@ -730,9 +769,9 @@ export function ScoreCreatePage() {
     })
     setNotation(parseScoreNotation(score.notation))
     setSelectedMeasureKeys(new Set())
-    setSelectedUnknownChords(new Set())
-    setShowUnknownChordsBelowTitle(false)
-    setUnknownChordBodyMode('none')
+    setSelectedUnknownChords(new Set(unknownDisplayPrefs.selectedUnknownChords))
+    setShowUnknownChordsBelowTitle(unknownDisplayPrefs.showUnknownChordsBelowTitle)
+    setUnknownChordBodyMode(unknownDisplayPrefs.unknownChordBodyMode)
     setActionError(null)
     setActionOk(`"${score.title}" 악보를 불러왔습니다.`)
   }
@@ -774,6 +813,14 @@ export function ScoreCreatePage() {
         validKeys,
         lineMeasureLengths,
       )
+      const notationWithUnknownDisplay = {
+        ...notationToSave,
+        unknownChordDisplay: {
+          selectedUnknownChords: selectedUnknownChordSymbolsOrdered,
+          showUnknownChordsBelowTitle,
+          unknownChordBodyMode,
+        },
+      }
 
       const saved = await saveMyScore(
         {
@@ -781,7 +828,7 @@ export function ScoreCreatePage() {
           title: trimmedTitle,
           artist: artist.trim(),
           sharedChordText,
-          notation: notationToSave,
+          notation: notationWithUnknownDisplay,
           verses: draft.verses.map((verse, index) => ({
             label: verse.label || `${index + 1}절`,
             lyrics: verse.lyrics,
