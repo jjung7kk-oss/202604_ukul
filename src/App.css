@@ -1533,7 +1533,7 @@
 }
 
 .score-preview__row-wrap + .score-preview__row-wrap {
-  margin-top: calc(var(--space-5) / 4);
+  margin-top: calc(var(--space-5) / 6);
 }
 
 .score-preview--readonly .score-preview__sheet-cell--chords,
@@ -2106,10 +2106,10 @@
 .score-preview__lyric-slot {
   display: flex;
   align-items: flex-start;
-  min-height: 26px;
+  min-height: 24px;
   min-width: 0;
-  padding: 4px 0 2px;
-  font: 500 clamp(0.86rem, 1.6vw, 0.98rem) / 1.5 var(--font-family);
+  padding: 2px 0 2px;
+  font: 500 clamp(0.9rem, 1.68vw, 1.02rem) / 1.5 var(--font-family);
   color: #2a2a2a;
   overflow: hidden;
 }
@@ -2442,7 +2442,7 @@
   }
 
   .score-preview__row-wrap + .score-preview__row-wrap {
-    margin-top: calc(var(--space-3) / 4);
+    margin-top: calc(var(--space-3) / 6);
   }
 
   .score-preview__row-wrap {
@@ -2460,7 +2460,7 @@
   }
 
   .score-preview__lyric-slot {
-    padding: 4px 0 2px;
+    padding: 2px 0 2px;
   }
 
   .score-preview__chord-token {

@@ -152,7 +152,7 @@ function LyricFitText({
     const el = ref.current
     if (!el) return
     const fit = (): void => {
-      const maxPx = 15
+      const maxPx = 16
       const minPx = 9
       if (!displayText.trim()) {
         el.style.fontSize = ''
