@@ -5,6 +5,8 @@ const STRING_LABELS_AECG = ['A', 'E', 'C', 'G'] as const
 type Props = {
   shape: ChordShape
   className?: string
+  /** 악보 미리보기 등 — 선·점 대비를 조금 높임 */
+  variant?: 'default' | 'preview'
 }
 
 /** 저장 순서 GCEA → 화면은 위에서 아래 AECG */
@@ -18,7 +20,7 @@ function computeFretSpan(frets: number[]): number {
   return Math.max(4, maxF)
 }
 
-export function HorizontalChordDiagram({ shape, className }: Props) {
+export function HorizontalChordDiagram({ shape, className, variant = 'default' }: Props) {
   const displayFrets = toDisplayFrets(shape.frets)
   const numFrets = computeFretSpan(displayFrets)
 
@@ -45,9 +47,13 @@ export function HorizontalChordDiagram({ shape, className }: Props) {
     return nutLineX + (fret - 0.5) * cellW
   }
 
-  const lineMuted = '#94a3b8'
-  const lineStrong = '#475569'
-  const nutStroke = '#334155'
+  const isPreview = variant === 'preview'
+  const lineMuted = isPreview ? '#64748b' : '#94a3b8'
+  const lineStrong = isPreview ? '#334155' : '#475569'
+  const nutStroke = isPreview ? '#1e293b' : '#334155'
+  const stringStrokeWidth = isPreview ? 1.35 : 1.1
+  const fretStrokeWidth = isPreview ? 1.2 : 1
+  const dotRadius = isPreview ? 7 : 6
 
   return (
     <svg
@@ -75,7 +81,7 @@ export function HorizontalChordDiagram({ shape, className }: Props) {
           textAnchor="end"
           fontSize="8"
           fontWeight="500"
-          fill="#94a3b8"
+          fill={isPreview ? '#64748b' : '#94a3b8'}
           fontFamily="var(--font-family, system-ui, sans-serif)"
         >
           {label}
@@ -100,7 +106,7 @@ export function HorizontalChordDiagram({ shape, className }: Props) {
           x2={boardRight}
           y2={y}
           stroke={lineStrong}
-          strokeWidth={1.1}
+          strokeWidth={stringStrokeWidth}
           strokeLinecap="butt"
         />
       ))}
@@ -113,7 +119,7 @@ export function HorizontalChordDiagram({ shape, className }: Props) {
           x2={nutLineX + k * cellW}
           y2={yBottom}
           stroke={lineMuted}
-          strokeWidth={1}
+          strokeWidth={fretStrokeWidth}
           strokeLinecap="butt"
         />
       ))}
@@ -128,7 +134,7 @@ export function HorizontalChordDiagram({ shape, className }: Props) {
             key={i}
             cx={cx}
             cy={cy}
-            r={6}
+            r={dotRadius}
             fill="var(--color-primary, #2f80ed)"
           />
         )

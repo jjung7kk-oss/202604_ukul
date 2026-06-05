@@ -1533,7 +1533,7 @@
 }
 
 .score-preview__row-wrap + .score-preview__row-wrap {
-  margin-top: calc(var(--space-5) / 7);
+  margin-top: calc(var(--space-5) / 10);
 }
 
 .score-preview--readonly .score-preview__sheet-cell--chords,
@@ -1583,13 +1583,15 @@
 
 .score-preview__row-index {
   position: absolute;
-  left: 0;
-  top: 10px;
+  left: -24px;
+  top: 50%;
+  transform: translateY(-50%);
   min-width: 18px;
   text-align: right;
-  font: 500 10px/1.2 var(--font-family);
+  font: 500 10px/1 var(--font-family);
   color: color-mix(in srgb, var(--color-text-sub) 68%, #8ea0b7);
   pointer-events: none;
+  z-index: 2;
 }
 
 .score-preview__volta-layer {
@@ -1657,8 +1659,8 @@
 
 .score-preview__chord-row {
   position: relative;
-  min-height: 34px;
-  padding: 0 var(--sheet-inline-pad) 2px;
+  min-height: 30px;
+  padding: 0 var(--sheet-inline-pad) 0;
 }
 
 .score-preview__chord-row .score-preview__chord-slot {
@@ -1670,8 +1672,8 @@
 .score-preview__staff-seg {
   position: relative;
   z-index: 2;
-  height: 22px;
-  min-height: 22px;
+  height: 18px;
+  min-height: 18px;
   overflow: visible;
   pointer-events: none;
 }
@@ -1712,7 +1714,7 @@
 .score-preview__staff-coda {
   position: absolute;
   left: 0;
-  bottom: 11px;
+  bottom: 9px;
   transform: translate(-50%, -100%);
   line-height: 1;
   pointer-events: none;
@@ -1726,7 +1728,7 @@
 .score-preview__staff-to-coda {
   position: absolute;
   right: 0;
-  bottom: 11px;
+  bottom: 9px;
   transform: translate(50%, -100%);
   display: inline-flex;
   align-items: baseline;
@@ -1747,8 +1749,8 @@
 
 .score-preview__jump-slot {
   position: relative;
-  min-height: 14px;
-  padding: 2px 0 4px;
+  min-height: 12px;
+  padding: 1px 0 3px;
   font: 600 10px/1.25 var(--font-family);
   color: var(--color-text-sub);
   text-align: right;
@@ -1800,7 +1802,7 @@
 
 .score-preview__sheet-inner {
   display: grid;
-  grid-template-rows: auto 22px auto auto;
+  grid-template-rows: auto 18px auto auto;
   align-items: stretch;
   width: 100%;
   min-width: 0;
@@ -1817,7 +1819,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 16px 0 0;
+  padding: 12px 0 0;
 }
 
 .score-preview__corner-segno {
@@ -1838,7 +1840,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 0 var(--sheet-inline-pad) 3px;
+  padding: 0 var(--sheet-inline-pad) 2px;
 }
 
 .score-preview__sheet-cell--has-fine {
@@ -1874,7 +1876,7 @@
 
 .score-preview__staff {
   position: relative;
-  height: 22px;
+  height: 18px;
   margin: 0;
   pointer-events: none;
 }
@@ -1910,7 +1912,7 @@
 
 .score-preview__chord-slot {
   position: relative;
-  min-height: 34px;
+  min-height: 30px;
   padding: 0;
 }
 
@@ -1936,7 +1938,7 @@
 .score-preview__inline-diagram-wrap {
   position: absolute;
   left: 0;
-  bottom: calc(100% + 2px);
+  bottom: calc(100% + 0px);
   width: 46px;
   height: 24px;
   overflow: hidden;
@@ -1950,11 +1952,11 @@
 }
 
 .score-preview--unknown-inline .score-preview__chord-row {
-  min-height: 34px;
+  min-height: 30px;
 }
 
 .score-preview--unknown-inline .score-preview__sheet-cell--chords {
-  padding-top: 22px;
+  padding-top: 16px;
 }
 
 .score-preview__unknown-band {
@@ -2100,15 +2102,15 @@
 .score-preview__chord-track {
   position: relative;
   height: 100%;
-  min-height: 34px;
+  min-height: 30px;
 }
 
 .score-preview__lyric-slot {
   display: flex;
   align-items: flex-start;
-  min-height: 23px;
+  min-height: 18px;
   min-width: 0;
-  padding: 1px 0 2px;
+  padding: 0;
   font: 500 clamp(0.9rem, 1.68vw, 1.02rem) / 1.5 var(--font-family);
   color: #2a2a2a;
   overflow: hidden;
@@ -2442,7 +2444,7 @@
   }
 
   .score-preview__row-wrap + .score-preview__row-wrap {
-    margin-top: calc(var(--space-3) / 7);
+    margin-top: calc(var(--space-3) / 10);
   }
 
   .score-preview__row-wrap {
@@ -2450,7 +2452,7 @@
   }
 
   .score-preview__row-index {
-    top: 9px;
+    left: -20px;
     min-width: 15px;
     font-size: 9px;
   }

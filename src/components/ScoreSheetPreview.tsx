@@ -258,7 +258,11 @@ export function ScoreSheetPreview({
             <article key={`unknown-title-${symbol}`} className="score-preview__unknown-card">
               <h4 className="score-preview__unknown-name">{symbol}</h4>
               <div className="score-preview__unknown-diagram-wrap">
-                <HorizontalChordDiagram shape={shape} className="score-preview__unknown-diagram" />
+                <HorizontalChordDiagram
+                  shape={shape}
+                  className="score-preview__unknown-diagram"
+                  variant="preview"
+                />
               </div>
             </article>
           ))}
@@ -285,9 +289,6 @@ export function ScoreSheetPreview({
             className="score-preview__row-wrap"
             aria-label={`${line.lineIndex + 1}번째 줄`}
           >
-            <span className="score-preview__row-index" aria-hidden="true">
-              {line.lineIndex + 1}
-            </span>
             <div className="score-preview__staff-line">
             {voltaForLine.length > 0 ? (
               <div
@@ -401,6 +402,7 @@ export function ScoreSheetPreview({
                                         <HorizontalChordDiagram
                                           shape={unknownShape}
                                           className="score-preview__inline-diagram"
+                                          variant="preview"
                                         />
                                       </span>
                                     ) : null}
@@ -443,6 +445,9 @@ export function ScoreSheetPreview({
                     className="score-preview__staff score-preview__staff--underlays"
                     style={{ gridColumn: '1 / -1', gridRow: 2 }}
                   >
+                    <span className="score-preview__row-index" aria-hidden="true">
+                      {line.lineIndex + 1}
+                    </span>
                     <div className="score-preview__staff-hline" aria-hidden="true" />
                     {Array.from({ length: measureCount + 1 }, (_, tickIndex) => {
                       if (repeatBoundaryTicks.has(tickIndex)) return null
@@ -546,6 +551,9 @@ export function ScoreSheetPreview({
                     className="score-preview__staff score-preview__staff--underlays"
                     style={{ gridColumn: '1 / -1', gridRow: 2 }}
                   >
+                    <span className="score-preview__row-index" aria-hidden="true">
+                      {line.lineIndex + 1}
+                    </span>
                     <div className="score-preview__staff-hline" aria-hidden="true" />
                     <StaffMeasureTick leftPct={0} tickKind="start" />
                     <StaffMeasureTick leftPct={100} tickKind="end" />
