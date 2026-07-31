@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "후이코드 — 우쿨렐레 코드 찾기"
+version = "1.0.0"
+id = "artifacts/huicode"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20159
+
+[services.development]
+run = "pnpm --filter @workspace/huicode run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/huicode", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/huicode/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20159"
+BASE_PATH = "/"
