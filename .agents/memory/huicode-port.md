@@ -38,6 +38,18 @@ During initial porting, Drizzle ORM + Replit PostgreSQL was used (lib/db/). This
 - Uses react-router-dom (not wouter), custom CSS (not Tailwind) — scaffold CSS was fully replaced
 - No @workspace/api-client-react hooks used; original raw fetch clients preserved
 
+## Dynamic chord type management (DB-based)
+- `ChordType` table in Supabase stores all types (key, label, orderIndex, aliases)
+- Seeded on first boot via `seedChordTypesIfEmpty()` in `index.ts`
+- `GET /chord-types` (public), `POST /chord-types` (admin) in routes/chords.ts
+- `ChordQuality = string` now (was strict union) — all code uses dynamic string
+- `useChordTypes` hook: fetches from API, falls back to static QUALITY_ORDER
+- `QualityTabs` now accepts `string` types (no hardcoded QUALITY_TAB_TEXT)
+- Both ChordFinderSection and ChordEditPage use `useChordTypes` hook
+- Parser (`transposeChordName.ts`): mM7 + aliases (mMaj7, minMaj7) added to SUFFIX_PARSE_ORDER
+- **Why:** admin can add new types from UI without code changes; parser is still static (dynamic parser is future work)
+- **Caution:** deleting ChordType rows removes them from UI but not from Chord/ChordShape data (orphaned)
+
 ## Score list/edit UX separation
 - `/sheet/list` → `ScoreListPage` (manage: 열기/복제/삭제, 새 악보)
 - `/sheet/create` → `ScoreCreatePage` (edit only; no embedded list)

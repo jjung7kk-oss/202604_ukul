@@ -1,49 +1,87 @@
 import { prisma } from "./db.js";
 
-type ChordQuality =
-  | "major" | "m" | "7" | "m7" | "maj7" | "sus4" | "sus2"
-  | "dim" | "aug" | "6" | "m6" | "add9" | "9";
-
 type ChordShape = { frets: [number, number, number, number] };
-
-type ChordLibrary = Record<string, Record<ChordQuality, { shapes: ChordShape[] }>>;
+type ChordLibrary = Record<string, Record<string, { shapes: ChordShape[] }>>;
 
 const CANONICAL_ROOTS = [
   "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
 ] as const;
 
-const QUALITIES: ChordQuality[] = [
-  "major", "m", "7", "m7", "maj7", "sus4", "sus2", "dim", "aug",
-  "6", "m6", "add9", "9",
+export type ChordTypeRecord = {
+  id: string;
+  key: string;
+  label: string;
+  orderIndex: number;
+  aliases: string[];
+};
+
+const INITIAL_CHORD_TYPES: Omit<ChordTypeRecord, "id">[] = [
+  { key: "major", label: "",      orderIndex: 0,  aliases: [] },
+  { key: "m",     label: "m",     orderIndex: 1,  aliases: [] },
+  { key: "7",     label: "7",     orderIndex: 2,  aliases: [] },
+  { key: "m7",    label: "m7",    orderIndex: 3,  aliases: [] },
+  { key: "maj7",  label: "maj7",  orderIndex: 4,  aliases: [] },
+  { key: "mM7",   label: "mM7",   orderIndex: 5,  aliases: ["mMaj7", "minMaj7"] },
+  { key: "sus4",  label: "sus4",  orderIndex: 6,  aliases: [] },
+  { key: "sus2",  label: "sus2",  orderIndex: 7,  aliases: [] },
+  { key: "dim",   label: "dim",   orderIndex: 8,  aliases: [] },
+  { key: "aug",   label: "aug",   orderIndex: 9,  aliases: [] },
+  { key: "6",     label: "6",     orderIndex: 10, aliases: [] },
+  { key: "m6",    label: "m6",    orderIndex: 11, aliases: [] },
+  { key: "add9",  label: "add9",  orderIndex: 12, aliases: [] },
+  { key: "9",     label: "9",     orderIndex: 13, aliases: [] },
 ];
 
-function emptyLibrary(): ChordLibrary {
-  const lib: ChordLibrary = {};
-  for (const r of CANONICAL_ROOTS) {
-    const byType = {} as Record<ChordQuality, { shapes: ChordShape[] }>;
-    for (const q of QUALITIES) {
-      byType[q] = { shapes: [] };
-    }
-    lib[r] = byType;
-  }
-  return lib;
+export async function seedChordTypesIfEmpty(): Promise<void> {
+  const count = await prisma.chordType.count();
+  if (count > 0) return;
+  await prisma.chordType.createMany({
+    data: INITIAL_CHORD_TYPES,
+    skipDuplicates: true,
+  });
+}
+
+export async function getChordTypes(): Promise<ChordTypeRecord[]> {
+  return prisma.chordType.findMany({ orderBy: { orderIndex: "asc" } });
+}
+
+export async function createChordType(
+  key: string,
+  label: string,
+  orderIndex: number,
+  aliases: string[],
+): Promise<ChordTypeRecord> {
+  return prisma.chordType.create({ data: { key, label, orderIndex, aliases } });
 }
 
 export async function getChordLibrary(): Promise<ChordLibrary> {
-  const chords = await prisma.chord.findMany({
-    include: { shapes: { orderBy: { orderIndex: "asc" } } },
-  });
-  const library = emptyLibrary();
+  const [chordTypes, chords] = await Promise.all([
+    prisma.chordType.findMany({ orderBy: { orderIndex: "asc" } }),
+    prisma.chord.findMany({
+      include: { shapes: { orderBy: { orderIndex: "asc" } } },
+    }),
+  ]);
+
+  const qualityKeys = chordTypes.map((ct) => ct.key);
+
+  const library: ChordLibrary = {};
+  for (const r of CANONICAL_ROOTS) {
+    const byType: Record<string, { shapes: ChordShape[] }> = {};
+    for (const key of qualityKeys) byType[key] = { shapes: [] };
+    library[r] = byType;
+  }
+
   for (const chord of chords) {
-    const root = chord.root;
-    const type = chord.type as ChordQuality;
+    const { root, type } = chord;
     if (!(root in library)) continue;
+    if (!(type in library[root]!)) library[root]![type] = { shapes: [] };
     library[root]![type] = {
       shapes: chord.shapes.map((s): ChordShape => ({
         frets: [s.g, s.c, s.e, s.a],
       })),
     };
   }
+
   return library;
 }
 
@@ -57,7 +95,9 @@ export async function getChordDetail(
   });
   if (!chord) return { shapes: [] };
   return {
-    shapes: chord.shapes.map((s) => ({ frets: [s.g, s.c, s.e, s.a] as [number, number, number, number] })),
+    shapes: chord.shapes.map((s) => ({
+      frets: [s.g, s.c, s.e, s.a] as [number, number, number, number],
+    })),
   };
 }
 

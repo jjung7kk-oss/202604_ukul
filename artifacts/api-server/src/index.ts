@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { seedChordTypesIfEmpty } from "./lib/chordService.js";
 
 const rawPort = process.env["PORT"];
 
@@ -22,4 +23,9 @@ app.listen(port, (err) => {
   }
 
   logger.info({ port }, "Server listening");
+
+  // ChordType 테이블이 비어있으면 기본 타입 시드
+  seedChordTypesIfEmpty().catch((e) => {
+    logger.error({ err: e }, "Failed to seed chord types");
+  });
 });

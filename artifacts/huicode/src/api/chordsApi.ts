@@ -1,5 +1,44 @@
 import { chordLibrary } from '../data/chordData'
-import type { CanonicalRootName, ChordLibrary, ChordQuality } from '../types/chord'
+import type { CanonicalRootName, ChordLibrary } from '../types/chord'
+
+// ── 코드 타입 ────────────────────────────────────────────────────────────────
+
+export type ChordTypeItem = {
+  id: string
+  key: string
+  label: string
+  orderIndex: number
+  aliases: string[]
+}
+
+export async function fetchChordTypes(): Promise<ChordTypeItem[]> {
+  const res = await fetch(`${base}/chord-types`, { cache: 'no-store' })
+  if (!res.ok) throw new Error(`chord-types fetch failed: ${res.status}`)
+  return res.json() as Promise<ChordTypeItem[]>
+}
+
+export async function createChordType(
+  data: { key: string; label: string; orderIndex: number; aliases: string[] },
+  authToken: string,
+): Promise<ChordTypeItem> {
+  const res = await fetch(`${base}/chord-types`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify(data),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(
+      typeof err === 'object' && err && 'error' in err
+        ? String((err as { error: string }).error)
+        : '코드 타입 등록에 실패했습니다.',
+    )
+  }
+  return res.json() as Promise<ChordTypeItem>
+}
 
 const base = '/api'
 
@@ -44,8 +83,7 @@ function cloneChordLibrary(): ChordLibrary {
 
 function staticChordDetail(root: string, type: string) {
   const r = root as CanonicalRootName
-  const q = type as ChordQuality
-  const shapes = chordLibrary[r]?.[q]?.shapes ?? []
+  const shapes = chordLibrary[r]?.[type]?.shapes ?? []
   return {
     shapes: shapes.map((s) => ({
       frets: [...s.frets] as [number, number, number, number],

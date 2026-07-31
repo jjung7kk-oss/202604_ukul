@@ -62,20 +62,22 @@ export const ROOT_ALIAS: Record<RootName, CanonicalRootName> = {
   B: 'B',
 }
 
-export const QUALITY_ORDER: { key: ChordQuality; label: string }[] = [
+/** 정적 폴백 / 초기값 (API 로드 전 표시용). DB 기반 목록은 useChordTypes 훅 사용. */
+export const QUALITY_ORDER: { key: string; label: string }[] = [
   { key: 'major', label: '' },
-  { key: 'm', label: 'm' },
-  { key: '7', label: '7' },
-  { key: 'm7', label: 'm7' },
-  { key: 'maj7', label: 'maj7' },
-  { key: 'sus4', label: 'sus4' },
-  { key: 'sus2', label: 'sus2' },
-  { key: 'dim', label: 'dim' },
-  { key: 'aug', label: 'aug' },
-  { key: '6', label: '6' },
-  { key: 'm6', label: 'm6' },
-  { key: 'add9', label: 'add9' },
-  { key: '9', label: '9' },
+  { key: 'm',     label: 'm' },
+  { key: '7',     label: '7' },
+  { key: 'm7',    label: 'm7' },
+  { key: 'maj7',  label: 'maj7' },
+  { key: 'mM7',   label: 'mM7' },
+  { key: 'sus4',  label: 'sus4' },
+  { key: 'sus2',  label: 'sus2' },
+  { key: 'dim',   label: 'dim' },
+  { key: 'aug',   label: 'aug' },
+  { key: '6',     label: '6' },
+  { key: 'm6',    label: 'm6' },
+  { key: 'add9',  label: 'add9' },
+  { key: '9',     label: '9' },
 ]
 
 type GceaFrets = [number, number, number, number]

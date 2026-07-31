@@ -8,6 +8,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model ChordType {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  label      String
+  orderIndex Int      @default(0)
+  aliases    String[] @default([])
+  createdAt  DateTime @default(now())
+}
+
 model Chord {
   id        String   @id @default(cuid())
   root      String

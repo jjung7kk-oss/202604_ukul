@@ -4,21 +4,22 @@ import { ChordDataFallbackBanner } from './ChordDataFallbackBanner'
 import {
   getChordReadingLabel,
   getChordShapesFromLibrary,
-  QUALITY_ORDER,
   ROOT_ORDER,
 } from '../data/chordData'
-import type { ChordQuality, RootName } from '../types/chord'
+import type { RootName } from '../types/chord'
 import { ChordShapeGrid } from './ChordShapeGrid'
 import { QualityTabs } from './QualityTabs'
 import { RootTabs } from './RootTabs'
 import { useAdminAuth } from '../hooks/useAdminAuth'
 import { useChordLibrary } from '../hooks/useChordLibrary'
+import { useChordTypes } from '../hooks/useChordTypes'
 
 export function ChordFinderSection() {
   const { isAuthenticated } = useAdminAuth()
   const [root, setRoot] = useState<RootName>('C')
-  const [quality, setQuality] = useState<ChordQuality>('major')
+  const [quality, setQuality] = useState<string>('major')
   const { library, loadInfo: libraryLoadInfo, loading } = useChordLibrary()
+  const { types: qualityItems } = useChordTypes()
 
   const shapes = useMemo(
     () => getChordShapesFromLibrary(library, root, quality),
@@ -72,7 +73,7 @@ export function ChordFinderSection() {
                 <h2 className="chord-finder__rail-heading">코드 타입</h2>
                 <QualityTabs
                   layout="vertical"
-                  items={QUALITY_ORDER}
+                  items={qualityItems}
                   selected={quality}
                   onSelect={setQuality}
                 />

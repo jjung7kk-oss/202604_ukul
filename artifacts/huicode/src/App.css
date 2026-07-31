@@ -2041,6 +2041,115 @@
   letter-spacing: 0.01em;
 }
 
+/* --- Chord edit: type management --------------------------------------- */
+.chord-edit__type-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
+}
+
+.chord-edit__type-add-btn {
+  background: none;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  color: var(--color-primary);
+  cursor: pointer;
+  font: var(--font-caption);
+  padding: 2px 8px;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+
+.chord-edit__type-add-btn:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.chord-edit__type-form {
+  margin-top: var(--space-2);
+  background: color-mix(in srgb, var(--color-bg-page) 60%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: var(--space-2) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.chord-edit__type-form-title {
+  font: var(--font-label-2);
+  color: var(--color-text-main);
+  margin-bottom: 4px;
+}
+
+.chord-edit__type-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.chord-edit__type-form-label {
+  font: var(--font-caption);
+  color: var(--color-text-sub);
+}
+
+.chord-edit__type-form-input {
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0 8px;
+  font: var(--font-body-2);
+  color: var(--color-text-main);
+  background: var(--color-bg-card);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chord-edit__type-form-input--short {
+  width: 80px;
+}
+
+.chord-edit__type-form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.chord-edit__type-form-hint {
+  font: var(--font-caption);
+  color: var(--color-text-sub);
+  opacity: 0.7;
+  margin-top: -2px;
+}
+
+.chord-edit__type-form-actions {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: 4px;
+}
+
+/* --- Chord edit: empty fingering state ---------------------------------- */
+.chord-edit__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+  border: 1.5px dashed var(--color-border);
+  border-radius: 10px;
+  margin: var(--space-2) 0;
+}
+
+.chord-edit__empty-text {
+  font: var(--font-body-2);
+  color: var(--color-text-sub);
+  margin: 0;
+}
+
+.chord-edit__empty-add-btn {
+  min-height: 36px !important;
+}
+
 /* --- Score list page ---------------------------------------------------- */
 .score-list-page {
   text-align: left;

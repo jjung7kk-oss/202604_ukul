@@ -31,20 +31,11 @@ export type RootName =
   | 'Bb'
   | 'B'
 
-export type ChordQuality =
-  | 'major'
-  | 'm'
-  | '7'
-  | 'm7'
-  | 'maj7'
-  | 'sus4'
-  | 'sus2'
-  | 'dim'
-  | 'aug'
-  | '6'
-  | 'm6'
-  | 'add9'
-  | '9'
+/**
+ * 코드 타입 (quality). 기존 정적 목록에서 동적 DB 기반 관리로 전환.
+ * 문자열 타입으로 확장하여 관리자가 추가한 타입도 수용.
+ */
+export type ChordQuality = string
 
 /** 저장 순서 [G, C, E, A] */
 export type Frets = [number, number, number, number]
@@ -57,7 +48,4 @@ export interface ChordEntry {
   shapes: ChordShape[]
 }
 
-export type ChordLibrary = Record<
-  CanonicalRootName,
-  Record<ChordQuality, ChordEntry>
->
+export type ChordLibrary = Record<CanonicalRootName, Record<string, ChordEntry>>
