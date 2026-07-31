@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { saveScore, listScoresByUser, ScoreServiceError } from "../lib/scoreService.js";
+import { saveScore, listScoresByUser, deleteScore, ScoreServiceError } from "../lib/scoreService.js";
 import { formatScoreDbError } from "../lib/scoreDbError.js";
 import { getBearerToken, getSessionUserId } from "../lib/adminAuth.js";
 
@@ -112,6 +112,27 @@ router.post("/scores", async (req, res) => {
       return;
     }
     res.status(500).json({ error: formatScoreDbError(e) });
+  }
+});
+
+router.delete("/scores/:id", async (req, res) => {
+  const userId = requireUserId(req, res as Parameters<typeof requireUserId>[1]);
+  if (!userId) return;
+  const scoreId = req.params["id"] ?? "";
+  if (!scoreId) {
+    res.status(400).json({ error: "scoreId required" });
+    return;
+  }
+  try {
+    await deleteScore(scoreId, userId);
+    res.json({ ok: true });
+  } catch (e) {
+    if (e instanceof ScoreServiceError) {
+      const status = e.code === "NOT_FOUND" ? 404 : 403;
+      res.status(status).json({ error: e.message });
+      return;
+    }
+    res.status(500).json({ error: "삭제 중 오류가 발생했습니다." });
   }
 });
 

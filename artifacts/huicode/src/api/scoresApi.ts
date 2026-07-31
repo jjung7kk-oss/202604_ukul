@@ -82,3 +82,28 @@ export async function saveMyScore(
   }
   return data.score
 }
+
+export async function deleteMyScore(scoreId: string, authToken: string): Promise<void> {
+  const res = await fetch(`${base}/scores/${encodeURIComponent(scoreId)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${authToken}` },
+  })
+  if (!res.ok) {
+    if (res.status === 401) throw new Error('로그인이 만료되었거나 권한이 없습니다.')
+    const err = await res.json().catch(() => ({}))
+    throw new Error(parseApiError(err, '악보 삭제에 실패했습니다.'))
+  }
+}
+
+export async function duplicateMyScore(score: ScoreDto, authToken: string): Promise<ScoreDto> {
+  return saveMyScore(
+    {
+      title: `${score.title} (복사)`,
+      artist: score.artist,
+      sharedChordText: score.sharedChordText,
+      notation: score.notation,
+      verses: score.verses.map((v) => ({ label: v.label, lyrics: v.lyrics })),
+    },
+    authToken,
+  )
+}

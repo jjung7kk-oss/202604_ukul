@@ -73,6 +73,16 @@ function shapeScore(score: {
   return { ...score, verses: [...score.verses].sort((a, b) => a.orderIndex - b.orderIndex) };
 }
 
+export async function deleteScore(scoreId: string, userId: string): Promise<void> {
+  const existing = await prisma.score.findUnique({
+    where: { id: scoreId },
+    select: { id: true, userId: true },
+  });
+  if (!existing) throw new ScoreServiceError("NOT_FOUND", "악보를 찾을 수 없습니다.");
+  if (existing.userId !== userId) throw new ScoreServiceError("FORBIDDEN", "다른 사용자의 악보입니다.");
+  await prisma.score.delete({ where: { id: scoreId } });
+}
+
 export async function listScoresByUser(userId: string) {
   const rows = await prisma.score.findMany({
     where: { userId },

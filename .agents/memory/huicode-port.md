@@ -37,3 +37,11 @@ During initial porting, Drizzle ORM + Replit PostgreSQL was used (lib/db/). This
 - Copied directly from `.migration-backup/src/` via `fullstack-copy-frontend.sh`
 - Uses react-router-dom (not wouter), custom CSS (not Tailwind) — scaffold CSS was fully replaced
 - No @workspace/api-client-react hooks used; original raw fetch clients preserved
+
+## Score list/edit UX separation
+- `/sheet/list` → `ScoreListPage` (manage: 열기/복제/삭제, 새 악보)
+- `/sheet/create` → `ScoreCreatePage` (edit only; no embedded list)
+- ScoreListPage navigates to `/sheet/create` with `state.scoreToLoad` to open a score
+- ScoreCreatePage reads `location.state.scoreToLoad` on mount (empty-dep useEffect) then clears history state
+- Print button calls `window.print()`; `@media print` CSS hides all UI except `.score-create-page__preview-main`
+- API: `DELETE /api/scores/:id` added (verifies ownership via JWT userId)
