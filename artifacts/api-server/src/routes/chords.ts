@@ -1,21 +1,8 @@
 import { Router, type IRouter, type Request, type Response, type NextFunction } from "express";
-import { eq, and, asc } from "drizzle-orm";
-import { db, chordsTable, chordShapesTable } from "@workspace/db";
-import { getBearerToken, verifySessionToken } from "../lib/adminAuth";
+import { getChordLibrary, getChordDetail, replaceChordShapes } from "../lib/chordService.js";
+import { getBearerToken, verifySessionToken } from "../lib/adminAuth.js";
 
 const router: IRouter = Router();
-
-const CANONICAL_ROOTS = [
-  "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B",
-] as const;
-
-const QUALITIES = [
-  "major", "m", "7", "m7", "maj7", "sus4", "sus2", "dim", "aug",
-  "6", "m6", "add9", "9",
-] as const;
-
-type CanonicalRoot = (typeof CANONICAL_ROOTS)[number];
-type Quality = (typeof QUALITIES)[number];
 
 function requireAdminAuth(req: Request, res: Response, next: NextFunction): void {
   const token = getBearerToken(req.headers.authorization);
@@ -26,35 +13,12 @@ function requireAdminAuth(req: Request, res: Response, next: NextFunction): void
   next();
 }
 
-function emptyLibrary() {
-  const lib: Record<string, Record<string, { shapes: { frets: [number, number, number, number] }[] }>> = {};
-  for (const r of CANONICAL_ROOTS) {
-    lib[r] = {};
-    for (const q of QUALITIES) {
-      lib[r]![q] = { shapes: [] };
-    }
-  }
-  return lib;
-}
-
 router.get("/chords/library", async (_req, res) => {
   try {
-    const chords = await db.query.chordsTable.findMany({
-      with: { shapes: { orderBy: asc(chordShapesTable.orderIndex) } },
-    });
-    const library = emptyLibrary();
-    for (const chord of chords) {
-      const root = chord.root as CanonicalRoot;
-      const type = chord.type as Quality;
-      if (!(root in library)) continue;
-      library[root]![type] = {
-        shapes: chord.shapes.map((s) => ({
-          frets: [s.g, s.c, s.e, s.a] as [number, number, number, number],
-        })),
-      };
-    }
+    const library = await getChordLibrary();
     res.json(library);
   } catch (e) {
+    console.error(e);
     res.status(500).json({ error: "Failed to load chord library" });
   }
 });
@@ -67,20 +31,10 @@ router.get("/chords/detail", requireAdminAuth, async (req, res) => {
     return;
   }
   try {
-    const chord = await db.query.chordsTable.findFirst({
-      where: and(eq(chordsTable.root, root), eq(chordsTable.type, type)),
-      with: { shapes: { orderBy: asc(chordShapesTable.orderIndex) } },
-    });
-    if (!chord) {
-      res.json({ shapes: [] });
-      return;
-    }
-    res.json({
-      shapes: chord.shapes.map((s) => ({
-        frets: [s.g, s.c, s.e, s.a] as [number, number, number, number],
-      })),
-    });
+    const detail = await getChordDetail(root, type);
+    res.json(detail);
   } catch (e) {
+    console.error(e);
     res.status(500).json({ error: "Failed to load chord" });
   }
 });
@@ -113,35 +67,10 @@ router.put("/chords/detail", requireAdminAuth, async (req, res) => {
     }
   }
   try {
-    await db.transaction(async (tx) => {
-      // upsert chord
-      const existing = await tx.query.chordsTable.findFirst({
-        where: and(eq(chordsTable.root, root), eq(chordsTable.type, type)),
-      });
-      let chordId: string;
-      if (existing) {
-        chordId = existing.id;
-      } else {
-        const inserted = await tx.insert(chordsTable).values({ root, type }).returning({ id: chordsTable.id });
-        chordId = inserted[0]!.id;
-      }
-      // replace shapes
-      await tx.delete(chordShapesTable).where(eq(chordShapesTable.chordId, chordId));
-      if (shapes.length > 0) {
-        await tx.insert(chordShapesTable).values(
-          shapes.map((s, i) => ({
-            chordId,
-            orderIndex: i,
-            g: s.frets[0],
-            c: s.frets[1],
-            e: s.frets[2],
-            a: s.frets[3],
-          })),
-        );
-      }
-    });
+    await replaceChordShapes(root, type, shapes);
     res.json({ ok: true });
   } catch (e) {
+    console.error(e);
     res.status(500).json({ error: "Failed to save" });
   }
 });
