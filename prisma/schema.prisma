@@ -1,0 +1,67 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ChordType {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  label      String
+  orderIndex Int      @default(0)
+  aliases    String[] @default([])
+  createdAt  DateTime @default(now())
+}
+
+model Chord {
+  id        String       @id @default(cuid())
+  root      String
+  type      String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  shapes    ChordShape[]
+
+  @@unique([root, type])
+}
+
+model Score {
+  id              String       @id @default(cuid())
+  userId          String
+  title           String
+  artist          String       @default("")
+  sharedChordText String       @default("")
+  notation        Json         @default("{}")
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  verses          ScoreVerse[]
+
+  @@index([userId, updatedAt])
+}
+
+model ScoreVerse {
+  id         String @id @default(cuid())
+  scoreId    String
+  score      Score  @relation(fields: [scoreId], references: [id], onDelete: Cascade)
+  orderIndex Int
+  label      String
+  lyrics     String @default("")
+
+  @@index([scoreId, orderIndex])
+}
+
+model ChordShape {
+  id         String @id @default(cuid())
+  chordId    String
+  chord      Chord  @relation(fields: [chordId], references: [id], onDelete: Cascade)
+  orderIndex Int
+  g          Int
+  c          Int
+  e          Int
+  a          Int
+
+  @@index([chordId, orderIndex])
+}

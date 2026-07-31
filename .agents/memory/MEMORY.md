@@ -1,1 +1,1 @@
-- [후이코드 Vercel port](huicode-port.md) — Prisma→Drizzle migration; auth requires ADMIN_USERNAME, ADMIN_PASSWORD, SESSION_SECRET secrets or server crashes on startup (by design).
+- [후이코드 프로젝트 구조](huicode-structure.md) — npm 단일 프로젝트(Vercel) + Replit artifacts 공존; shared/ = 서버 공통 코드.
