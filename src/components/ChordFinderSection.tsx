@@ -1,9 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  fetchChordLibrary,
-  type ChordLibraryLoadInfo,
-} from '../api/chordsApi'
 import { ChordDataFallbackBanner } from './ChordDataFallbackBanner'
 import {
   getChordReadingLabel,
@@ -11,37 +7,18 @@ import {
   QUALITY_ORDER,
   ROOT_ORDER,
 } from '../data/chordData'
-import type { ChordLibrary, ChordQuality, RootName } from '../types/chord'
+import type { ChordQuality, RootName } from '../types/chord'
 import { ChordShapeGrid } from './ChordShapeGrid'
 import { QualityTabs } from './QualityTabs'
 import { RootTabs } from './RootTabs'
 import { useAdminAuth } from '../hooks/useAdminAuth'
+import { useChordLibrary } from '../hooks/useChordLibrary'
 
 export function ChordFinderSection() {
   const { isAuthenticated } = useAdminAuth()
   const [root, setRoot] = useState<RootName>('C')
   const [quality, setQuality] = useState<ChordQuality>('major')
-  const [library, setLibrary] = useState<ChordLibrary | null>(null)
-  const [libraryLoadInfo, setLibraryLoadInfo] =
-    useState<ChordLibraryLoadInfo | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let cancelled = false
-    fetchChordLibrary()
-      .then(({ library: lib, loadInfo }) => {
-        if (!cancelled) {
-          setLibrary(lib)
-          setLibraryLoadInfo(loadInfo)
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
+  const { library, loadInfo: libraryLoadInfo, loading } = useChordLibrary()
 
   const shapes = useMemo(
     () => getChordShapesFromLibrary(library, root, quality),

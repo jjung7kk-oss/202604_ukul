@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { chordLibrary } from '../data/chordData'
 import { parseScoreNotation, type ScoreNotationState } from '../lib/scoreNotation'
 import {
   SCORE_PREVIEW_POPOUT_STORAGE_KEY,
   type ScorePreviewPopoutStoredV1,
 } from '../lib/scorePreviewPopout'
+import { useChordLibrary } from '../hooks/useChordLibrary'
 import { getRepresentativeShapeForSymbol } from '../utils/chordSymbolShape'
 import { ScoreSheetPreview, type PreviewLine } from './ScoreSheetPreview'
 
@@ -14,6 +14,7 @@ function coerceLines(raw: unknown): PreviewLine[] {
 }
 
 export function ScorePreviewPopoutPage() {
+  const { library: chordLibrary } = useChordLibrary()
   const [title, setTitle] = useState('미리보기')
   const [artist, setArtist] = useState('')
   const [lines, setLines] = useState<PreviewLine[]>([])
@@ -68,13 +69,14 @@ export function ScorePreviewPopoutPage() {
   const empty = useMemo(() => lines.length === 0, [lines.length])
   const unknownChordShapeMap = useMemo(() => {
     const out = new Map()
+    if (!chordLibrary) return out
     for (const symbol of selectedUnknownChords) {
       const shape = getRepresentativeShapeForSymbol(chordLibrary, symbol)
       if (!shape) continue
       out.set(symbol, shape)
     }
     return out
-  }, [selectedUnknownChords])
+  }, [chordLibrary, selectedUnknownChords])
 
   return (
     <div className="score-preview-popout-page">

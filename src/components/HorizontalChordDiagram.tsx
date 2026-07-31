@@ -23,10 +23,11 @@ function computeFretSpan(frets: number[]): number {
 export function HorizontalChordDiagram({ shape, className, variant = 'default' }: Props) {
   const displayFrets = toDisplayFrets(shape.frets)
   const numFrets = computeFretSpan(displayFrets)
+  const isPreview = variant === 'preview'
 
   /** 칸은 가로로 조금 더 긴 직사각형, 전체는 가로:세로 ≈ 1.5 : 1 부근 */
-  const leftLabelW = 11
-  const nutLineX = leftLabelW + 5
+  const leftLabelW = isPreview ? 0 : 11
+  const nutLineX = isPreview ? 3 : leftLabelW + 5
   const cellW = 24
   const stringGap = 16
   const topPad = 8
@@ -47,13 +48,13 @@ export function HorizontalChordDiagram({ shape, className, variant = 'default' }
     return nutLineX + (fret - 0.5) * cellW
   }
 
-  const isPreview = variant === 'preview'
-  const lineMuted = isPreview ? '#64748b' : '#94a3b8'
-  const lineStrong = isPreview ? '#334155' : '#475569'
-  const nutStroke = isPreview ? '#1e293b' : '#334155'
-  const stringStrokeWidth = isPreview ? 1.35 : 1.1
-  const fretStrokeWidth = isPreview ? 1.2 : 1
-  const dotRadius = isPreview ? 7 : 6
+  const lineMuted = isPreview ? '#444444' : '#94a3b8'
+  const lineStrong = isPreview ? '#111111' : '#475569'
+  const nutStroke = isPreview ? '#050505' : '#334155'
+  const stringStrokeWidth = isPreview ? 1.5 : 1.1
+  const fretStrokeWidth = isPreview ? 1.35 : 1
+  const nutStrokeWidth = isPreview ? 2.75 : 2.5
+  const dotRadius = isPreview ? 8 : 6
 
   return (
     <svg
@@ -73,20 +74,22 @@ export function HorizontalChordDiagram({ shape, className, variant = 'default' }
         fill="var(--color-bg-card, #ffffff)"
       />
 
-      {STRING_LABELS_AECG.map((label, i) => (
-        <text
-          key={label}
-          x={leftLabelW}
-          y={stringYs[i]! + 3.5}
-          textAnchor="end"
-          fontSize="8"
-          fontWeight="500"
-          fill={isPreview ? '#64748b' : '#94a3b8'}
-          fontFamily="var(--font-family, system-ui, sans-serif)"
-        >
-          {label}
-        </text>
-      ))}
+      {!isPreview
+        ? STRING_LABELS_AECG.map((label, i) => (
+            <text
+              key={label}
+              x={leftLabelW}
+              y={stringYs[i]! + 3.5}
+              textAnchor="end"
+              fontSize="8"
+              fontWeight="500"
+              fill="#94a3b8"
+              fontFamily="var(--font-family, system-ui, sans-serif)"
+            >
+              {label}
+            </text>
+          ))
+        : null}
 
       <line
         x1={nutLineX}
@@ -94,7 +97,7 @@ export function HorizontalChordDiagram({ shape, className, variant = 'default' }
         x2={nutLineX}
         y2={yBottom}
         stroke={nutStroke}
-        strokeWidth={2.5}
+        strokeWidth={nutStrokeWidth}
         strokeLinecap="butt"
       />
 

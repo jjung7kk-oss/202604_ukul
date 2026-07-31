@@ -5,31 +5,33 @@ import type { CanonicalRootName } from '../src/types/chord'
 const prisma = new PrismaClient()
 
 async function main() {
-  const count = await prisma.chord.count()
-  if (count > 0) {
-    console.log('Database already seeded, skipping.')
-    return
-  }
+  let synced = 0
 
   for (const root of Object.keys(chordLibrary) as CanonicalRootName[]) {
     const byQuality = chordLibrary[root]
     for (const { key: type } of QUALITY_ORDER) {
       const entry = byQuality[type]
       const shapes = entry?.shapes?.slice(0, 4) ?? []
-      await prisma.chord.create({
-        data: {
-          root,
-          type,
-          shapes: {
-            create: shapes.map((s, orderIndex) => {
-              const [g, c, e, a] = s.frets
-              return { orderIndex, g, c, e, a }
-            }),
-          },
-        },
+
+      const chord = await prisma.chord.upsert({
+        where: { root_type: { root, type } },
+        create: { root, type },
+        update: {},
       })
+
+      await prisma.chordShape.deleteMany({ where: { chordId: chord.id } })
+      for (let orderIndex = 0; orderIndex < shapes.length; orderIndex++) {
+        const [g, c, e, a] = shapes[orderIndex]!.frets
+        await prisma.chordShape.create({
+          data: { chordId: chord.id, orderIndex, g, c, e, a },
+        })
+      }
+
+      synced += 1
     }
   }
+
+  console.log(`Synced ${synced} chord entries from chordLibrary.`)
 }
 
 main()

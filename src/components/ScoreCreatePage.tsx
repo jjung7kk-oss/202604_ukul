@@ -4,8 +4,8 @@ import {
   saveMyScore,
   type ScoreDto,
 } from '../api/scoresApi'
-import { chordLibrary } from '../data/chordData'
 import { useAdminAuth } from '../hooks/useAdminAuth'
+import { useChordLibrary } from '../hooks/useChordLibrary'
 import {
   collectValidMeasureKeysFromPreview,
   emptyNotationState,
@@ -307,6 +307,7 @@ function flipBoolMeasureField(
 
 export function ScoreCreatePage() {
   const { token } = useAdminAuth()
+  const { library: chordLibrary } = useChordLibrary()
   const [draft, setDraft] = useState<ScoreDraft>(INITIAL_DRAFT)
   const [title, setTitle] = useState('')
   const [artist, setArtist] = useState('')
@@ -431,13 +432,14 @@ export function ScoreCreatePage() {
   )
   const selectedUnknownChordShapeMap = useMemo(() => {
     const out = new Map()
+    if (!chordLibrary) return out
     for (const symbol of selectedUnknownChordSymbolsOrdered) {
       const shape = getRepresentativeShapeForSymbol(chordLibrary, symbol)
       if (!shape) continue
       out.set(symbol, shape)
     }
     return out
-  }, [selectedUnknownChordSymbolsOrdered])
+  }, [chordLibrary, selectedUnknownChordSymbolsOrdered])
 
   const hasVerse1Input = (verse1?.lyrics ?? '').trim().length > 0
   const pairedEditorDisplayLineCount = useMemo(() => {
