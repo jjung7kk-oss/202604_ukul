@@ -1,5 +1,6 @@
 {
-  "buildCommand": "prisma generate && prisma migrate deploy && npm run build",
+  "installCommand": "npm ci",
+  "buildCommand": "prisma generate && npm run build",
   "outputDirectory": "dist",
   "functions": {
     "api/**/*.ts": {
