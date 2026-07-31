@@ -1,0 +1,1 @@
+- [후이코드 Vercel port](huicode-port.md) — Prisma→Drizzle migration; auth requires ADMIN_USERNAME, ADMIN_PASSWORD, SESSION_SECRET secrets or server crashes on startup (by design).
