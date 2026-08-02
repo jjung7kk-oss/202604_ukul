@@ -4,6 +4,7 @@ import { ChordEditPage } from './components/ChordEditPage'
 import { ChordFinderSection } from './components/ChordFinderSection'
 import { RequireAdmin } from './components/RequireAdmin'
 import { ScoreCreatePage } from './components/ScoreCreatePage'
+import { ScoreListPage } from './components/ScoreListPage'
 import { ScorePreviewPopoutPage } from './components/ScorePreviewPopoutPage'
 import { TransposePage } from './components/TransposePage'
 import { useAdminAuth } from './hooks/useAdminAuth'
@@ -17,6 +18,7 @@ function AppLayout() {
     pathname === '/' || pathname === '/finder'
   const editNavActive =
     pathname === '/edit' || pathname === '/admin/chords'
+  const scoreListNavActive = pathname === '/sheet/list'
   const scoreCreateNavActive = pathname === '/sheet/create'
 
   return (
@@ -47,12 +49,12 @@ function AppLayout() {
               {isAuthenticated ? (
                 <li className="app-nav__item">
                   <NavLink
-                    to="/edit"
+                    to="/sheet/list"
                     className={() =>
-                      `app-nav__link${editNavActive ? ' app-nav__link--active' : ''}`
+                      `app-nav__link${scoreListNavActive ? ' app-nav__link--active' : ''}`
                     }
                   >
-                    코드수정
+                    악보 목록
                   </NavLink>
                 </li>
               ) : null}
@@ -65,6 +67,18 @@ function AppLayout() {
                     }
                   >
                     악보 만들기
+                  </NavLink>
+                </li>
+              ) : null}
+              {isAuthenticated ? (
+                <li className="app-nav__item">
+                  <NavLink
+                    to="/edit"
+                    className={() =>
+                      `app-nav__link${editNavActive ? ' app-nav__link--active' : ''}`
+                    }
+                  >
+                    코드수정
                   </NavLink>
                 </li>
               ) : null}
@@ -129,6 +143,14 @@ function App() {
           element={
             <RequireAdmin>
               <ChordEditPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="sheet/list"
+          element={
+            <RequireAdmin>
+              <ScoreListPage />
             </RequireAdmin>
           }
         />

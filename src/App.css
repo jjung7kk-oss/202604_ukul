@@ -2041,6 +2041,263 @@
   letter-spacing: 0.01em;
 }
 
+/* --- Chord edit: type management --------------------------------------- */
+.chord-edit__type-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  margin-bottom: var(--space-1);
+}
+
+.chord-edit__type-add-btn {
+  background: none;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  color: var(--color-primary);
+  cursor: pointer;
+  font: var(--font-caption);
+  padding: 2px 8px;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+
+.chord-edit__type-add-btn:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.chord-edit__type-form {
+  margin-top: var(--space-2);
+  background: color-mix(in srgb, var(--color-bg-page) 60%, transparent);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: var(--space-2) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.chord-edit__type-form-title {
+  font: var(--font-label-2);
+  color: var(--color-text-main);
+  margin-bottom: 4px;
+}
+
+.chord-edit__type-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.chord-edit__type-form-label {
+  font: var(--font-caption);
+  color: var(--color-text-sub);
+}
+
+.chord-edit__type-form-input {
+  height: 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0 8px;
+  font: var(--font-body-2);
+  color: var(--color-text-main);
+  background: var(--color-bg-card);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.chord-edit__type-form-input--short {
+  width: 80px;
+}
+
+.chord-edit__type-form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.chord-edit__type-form-hint {
+  font: var(--font-caption);
+  color: var(--color-text-sub);
+  opacity: 0.7;
+  margin-top: -2px;
+}
+
+.chord-edit__type-form-actions {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: 4px;
+}
+
+/* --- Chord edit: empty fingering state ---------------------------------- */
+.chord-edit__empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+  border: 1.5px dashed var(--color-border);
+  border-radius: 10px;
+  margin: var(--space-2) 0;
+}
+
+.chord-edit__empty-text {
+  font: var(--font-body-2);
+  color: var(--color-text-sub);
+  margin: 0;
+}
+
+.chord-edit__empty-add-btn {
+  min-height: 36px !important;
+}
+
+/* --- Score list page ---------------------------------------------------- */
+.score-list-page {
+  text-align: left;
+  color: var(--color-text-main);
+}
+
+.score-list-page__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.score-list-page__card {
+  gap: var(--space-3);
+}
+
+.score-list-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.score-list-page__header-left {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.score-list-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+}
+
+.score-list-page__table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.score-list-page__table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--font-body-2);
+}
+
+.score-list-page__th {
+  padding: 8px 10px;
+  text-align: left;
+  font: var(--font-label-2);
+  color: var(--color-text-sub);
+  background: var(--color-bg-page);
+  border-bottom: 2px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.score-list-page__th--title { min-width: 160px; }
+.score-list-page__th--artist { min-width: 100px; }
+.score-list-page__th--date { min-width: 130px; white-space: nowrap; }
+.score-list-page__th--actions { min-width: 180px; }
+
+.score-list-page__row {
+  border-bottom: 1px solid var(--color-border);
+  transition: background 0.1s;
+}
+
+.score-list-page__row:hover {
+  background: color-mix(in srgb, var(--color-bg-page) 80%, transparent);
+}
+
+.score-list-page__td {
+  padding: 9px 10px;
+  vertical-align: middle;
+}
+
+.score-list-page__td--date {
+  font: var(--font-caption);
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+
+.score-list-page__td--artist {
+  color: var(--color-text-sub);
+}
+
+.score-list-page__title-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: var(--font-label-1);
+  color: var(--color-primary);
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.score-list-page__title-btn:hover {
+  color: var(--color-primary-light);
+}
+
+.score-list-page__empty-cell {
+  color: var(--color-text-sub);
+  opacity: 0.5;
+}
+
+.score-list-page__action-row,
+.score-list-page__confirm-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.score-list-page__confirm-row {
+  gap: 8px;
+}
+
+.score-list-page__confirm-label {
+  font: var(--font-caption);
+  color: var(--color-text-sub);
+  white-space: nowrap;
+}
+
+.score-list-page__action-btn {
+  min-height: 32px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+}
+
+.score-create-page__preview-btn-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 767px) {
+  .score-list-page__th--date,
+  .score-list-page__td--date {
+    display: none;
+  }
+}
+
 /* Chrome Ctrl+P → PDF: 배경·SVG 채우기 유지, 얇은 레이어 클리핑 완화 */
 @media print {
   @page {
@@ -2096,6 +2353,45 @@
   .score-preview__brand-footer {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  /* 악보 만들기 페이지: 편집 UI 숨기고 악보 미리보기만 인쇄 */
+  .app-header,
+  .app-footer,
+  .score-create-page .chord-finder__hero,
+  .score-create-page__guide,
+  .score-create-page__manage,
+  .score-create-page__saved-list,
+  .score-create-page__pair-editor-card,
+  .score-create-page__unknown-tool,
+  .score-create-page__preview-head,
+  .score-create-page__symbols-sticky,
+  .score-create-page__preview-btn-group {
+    display: none !important;
+  }
+
+  .score-create-page__workspace {
+    display: block !important;
+    margin: 0 !important;
+    gap: 0 !important;
+  }
+
+  .score-create-page__preview.section-card {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: none !important;
+  }
+
+  .score-create-page__preview-tools {
+    display: block !important;
+    margin: 0 !important;
+  }
+
+  .score-create-page__preview-main {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
 

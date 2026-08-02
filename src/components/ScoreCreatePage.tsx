@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
-  fetchMyScores,
   saveMyScore,
   type ScoreDto,
 } from '../api/scoresApi'
@@ -167,16 +167,6 @@ function toEditorVersesFromStored(verses: { label: string; lyrics: string }[]): 
   }))
 }
 
-function formatUpdatedAt(dateString: string): string {
-  const date = new Date(dateString)
-  if (Number.isNaN(date.getTime())) return '-'
-  try {
-    return date.toLocaleString('ko-KR')
-  } catch {
-    return date.toISOString()
-  }
-}
-
 function compareMeasureKeys(a: string, b: string): number {
   const pa = parseMeasureKey(a)
   const pb = parseMeasureKey(b)
@@ -313,8 +303,6 @@ export function ScoreCreatePage() {
   const [artist, setArtist] = useState('')
   const [sharedChordText, setSharedChordText] = useState<string>('')
   const [currentScoreId, setCurrentScoreId] = useState<string | null>(null)
-  const [savedScores, setSavedScores] = useState<ScoreDto[]>([])
-  const [loadingScores, setLoadingScores] = useState(false)
   const [savingScore, setSavingScore] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [actionOk, setActionOk] = useState<string | null>(null)
@@ -556,34 +544,20 @@ export function ScoreCreatePage() {
     })
   }
 
+  const location = useLocation()
   useEffect(() => {
-    if (!token) return
-    let cancelled = false
-    setLoadingScores(true)
-    fetchMyScores(token)
-      .then((scores) => {
-        if (!cancelled) setSavedScores(scores)
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          setActionError(
-            err instanceof Error ? err.message : '내 악보 목록을 불러오지 못했습니다.',
-          )
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingScores(false)
-      })
-    return () => {
-      cancelled = true
+    const state = location.state as { scoreToLoad?: ScoreDto } | null
+    if (state?.scoreToLoad) {
+      applyLoadedScore(state.scoreToLoad)
+      window.history.replaceState({}, document.title)
     }
-  }, [token])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
-  const reloadScores = async (): Promise<void> => {
-    if (!token) return
-    const scores = await fetchMyScores(token)
-    setSavedScores(scores)
-  }
+  const openPrint = useCallback(() => {
+    if (!hasVerse1Input) return
+    window.print()
+  }, [hasVerse1Input])
 
   const toggleMeasureSelection = useCallback((measureKey: string) => {
     const clicked = parseMeasureKey(measureKey)
@@ -841,14 +815,6 @@ export function ScoreCreatePage() {
       applyLoadedScore(saved)
       setActionError(null)
       setActionOk(wasEditingExisting ? '수정 저장되었습니다.' : '새 악보로 저장되었습니다.')
-      try {
-        await reloadScores()
-      } catch {
-        setActionOk(
-          (wasEditingExisting ? '수정 저장되었습니다.' : '새 악보로 저장되었습니다.') +
-            ' 다만 내 악보 목록만 다시 불러오지 못했습니다. 페이지를 새로고침 해 보세요.',
-        )
-      }
     } catch (err) {
       setActionError(err instanceof Error ? err.message : '저장에 실패했습니다.')
     } finally {
@@ -940,37 +906,6 @@ export function ScoreCreatePage() {
               {actionOk}
             </p>
           ) : null}
-        </div>
-
-        <div className="section-card score-create-page__saved-list">
-          <div className="score-create-page__manage-head">
-            <h2 className="chord-finder__heading">내 악보 목록</h2>
-            {loadingScores ? (
-              <span className="score-create-page__saved-meta">불러오는 중…</span>
-            ) : (
-              <span className="score-create-page__saved-meta">{savedScores.length}개</span>
-            )}
-          </div>
-          {savedScores.length > 0 ? (
-            <ul className="score-create-page__saved-items">
-              {savedScores.map((score) => (
-                <li key={score.id}>
-                  <button
-                    type="button"
-                    className={`score-create-page__saved-btn${currentScoreId === score.id ? ' score-create-page__saved-btn--active' : ''}`}
-                    onClick={() => applyLoadedScore(score)}
-                  >
-                    <span className="score-create-page__saved-title">{score.title}</span>
-                    <span className="score-create-page__saved-date">
-                      수정 {formatUpdatedAt(score.updatedAt)}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="chord-finder__load-hint">저장된 악보가 아직 없습니다.</p>
-          )}
         </div>
 
         {verse1 ? (
@@ -1153,13 +1088,22 @@ export function ScoreCreatePage() {
               미리보기
             </h2>
             {hasVerse1Input ? (
-              <button
-                type="button"
-                className="chord-edit__btn chord-edit__btn--secondary score-create-page__preview-popout-btn"
-                onClick={openPreviewPopout}
-              >
-                새 창 미리보기
-              </button>
+              <div className="score-create-page__preview-btn-group">
+                <button
+                  type="button"
+                  className="chord-edit__btn chord-edit__btn--secondary score-create-page__preview-popout-btn"
+                  onClick={openPreviewPopout}
+                >
+                  새 창 미리보기
+                </button>
+                <button
+                  type="button"
+                  className="chord-edit__btn chord-edit__btn--secondary score-create-page__preview-popout-btn"
+                  onClick={openPrint}
+                >
+                  🖨 인쇄
+                </button>
+              </div>
             ) : null}
           </div>
           {!hasVerse1Input ? (
