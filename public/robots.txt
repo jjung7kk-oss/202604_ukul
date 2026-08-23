@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /edit
+Disallow: /sheet/list
+Disallow: /sheet/create
+Disallow: /api
+
+Sitemap: https://202604ukul.vercel.app/sitemap.xml
