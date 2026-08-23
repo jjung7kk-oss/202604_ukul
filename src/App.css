@@ -1516,8 +1516,6 @@
   flex-direction: column;
   gap: 0;
   padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
   background: #fff;
   color: var(--color-text-main);
   min-width: 0;
@@ -1610,7 +1608,6 @@
   margin-top: 0;
   border-top: 2px solid var(--score-symbol-color-strong);
   border-left: 2px solid var(--score-symbol-color-strong);
-  border-right: 2px solid var(--score-symbol-color-strong);
   border-radius: 0;
   position: relative;
   min-height: 26px;
