@@ -894,8 +894,95 @@
   margin-bottom: var(--space-4);
 }
 
+/* 상단 바: 페이지 제목 + 곡 제목/아티스트 + 저장 버튼을 한 줄로 */
+.score-create-page__topbar {
+  margin-bottom: var(--space-2);
+}
+
+.score-create-page__topbar-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--space-2) var(--space-3);
+}
+
+.score-create-page__topbar-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: 4px;
+}
+
+.score-create-page__topbar .chord-edit__label {
+  gap: 2px;
+}
+
+.score-create-page__topbar .chord-edit__input {
+  height: 34px;
+}
+
+.score-create-page__topbar .chord-edit__btn {
+  min-height: 34px;
+}
+
+@media (max-width: 767px) {
+  .score-create-page__topbar-row {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+  }
+}
+
+/* 입력 안내: 편집 영역 높이를 차지하지 않도록 접이식 팝오버 */
+.score-create-page__pair-editor-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .score-create-page__guide {
-  gap: var(--space-2);
+  position: relative;
+}
+
+.score-create-page__guide-summary {
+  cursor: pointer;
+  font: var(--font-caption);
+  color: var(--color-text-sub);
+  list-style: none;
+  padding: 4px 6px;
+  border-radius: var(--radius-sm);
+  user-select: none;
+}
+
+.score-create-page__guide-summary::-webkit-details-marker {
+  display: none;
+}
+
+.score-create-page__guide-summary::before {
+  content: 'ⓘ ';
+}
+
+.score-create-page__guide-summary:hover,
+.score-create-page__guide[open] .score-create-page__guide-summary {
+  color: var(--color-primary);
+}
+
+.score-create-page__guide[open] .score-create-page__guide-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 20;
+  width: max-content;
+  max-width: 320px;
+  padding: 8px 12px 8px 26px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--color-text-main) 28%, transparent);
+}
+
+/* 입력/미리보기 경계 드래그 핸들 — 워크스페이스 모드에서만 표시 */
+.score-create-page__split-handle {
+  display: none;
 }
 
 .score-create-page__guide-list {
@@ -1015,7 +1102,7 @@
 
 .score-create-page__pair-editor-wrap {
   display: grid;
-  grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
   gap: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
@@ -1090,7 +1177,7 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: 32px minmax(0, 1.75fr) minmax(0, 1fr);
+  grid-template-columns: 32px minmax(0, 7fr) minmax(0, 3fr);
   align-items: stretch;
   min-height: 100%;
   height: 100%;
@@ -1448,10 +1535,10 @@
   justify-content: center;
 }
 
-/* 태블릿: 미리보기+기호를 한 덩어리 작업 영역으로, 페이지 무한 연장 방지 */
+/* 태블릿: 악보 미리보기만 내부 스크롤, 페이지 무한 연장 방지 */
 @media (min-width: 768px) and (max-width: 1023px) {
   .score-create-page__preview-tools {
-    max-height: min(62vh, 720px);
+    max-height: min(48vh, 562px);
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
@@ -1461,33 +1548,214 @@
 
 @media (min-width: 1024px) {
   .score-create-page__preview-tools {
+    max-height: min(56vh, 718px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/*
+ * 노트북 이상: 상하 2분할 편집기형 워크스페이스
+ * - 입력 + 미리보기 분할 영역을 뷰포트 높이에 맞추고, 각각 내부 스크롤
+ * - 기호 넣기는 미리보기 오른쪽 열 (미리보기를 보면서 바로 선택)
+ * - 모르는 코드 운지 표시는 분할 영역 아래 일반 흐름 (페이지 스크롤로 접근)
+ * - 그 외 화면에서는 기호 넣기도 미리보기 아래 (위로는 올리지 않음)
+ * - 분할 비율은 --score-split-input (0~1, 기본 0.4), 경계 핸들 드래그로 조절
+ * - 미리보기 스크롤 영역 높이 = (기준 높이 - 입력 높이 - 머리 영역) × --score-preview-scale (0.78)
+ * - 오프셋 = 헤더(64) + app-main 위 패딩 + 상단 바(약 78) + 아래 여유(기호 패널 머리가 살짝 보이도록)
+ */
+@media screen and (min-width: 1024px) and (min-height: 600px) {
+  .score-create-page {
+    --score-workspace-offset: calc(64px + var(--space-4) + 78px + 40px);
+  }
+
+  .score-create-page__workspace {
+    --score-workspace-base: max(400px, calc(100svh - var(--score-workspace-offset)));
+    /* 미리보기 카드의 머리(제목·버튼)와 여백 — 스크롤 영역만 줄이기 위해 따로 뺀다 */
+    --score-preview-chrome: 60px;
+    --score-symbols-col-width: 232px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(168px, 204px);
+    grid-template-rows:
+      calc(var(--score-workspace-base) * var(--score-split-input, 0.4))
+      12px
+      calc(
+        var(--score-preview-chrome) +
+          (
+            var(--score-workspace-base) * (1 - var(--score-split-input, 0.4)) - 12px -
+              var(--score-preview-chrome)
+          ) *
+          var(--score-preview-scale, 0.78)
+      );
+    grid-template-columns: minmax(0, 1fr) var(--score-symbols-col-width);
+    column-gap: var(--space-2);
+    gap: 0;
+    margin-bottom: 0;
+  }
+
+  /* 입력 · 경계 핸들은 두 열 전체, 미리보기는 왼쪽, 기호 넣기는 오른쪽 */
+  .score-create-page__pair-editor-card,
+  .score-create-page__split-handle {
+    grid-column: 1 / -1;
+  }
+
+  .score-create-page__preview {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .score-create-page__symbols {
+    grid-column: 2;
+    grid-row: 3;
+    min-height: 0;
+    min-width: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: var(--radius-md);
+  }
+
+  .score-create-page__symbols .score-notation-panel.section-card {
+    min-height: 100%;
+    padding: 6px 8px;
+    gap: 3px;
+  }
+
+  .score-create-page__symbols .score-notation-panel__pin-actions {
+    margin: -6px -8px 4px;
+    padding: 6px 8px 6px;
+  }
+
+  .score-create-page__symbols .score-notation__action-row--pinned {
+    flex-direction: row;
+  }
+
+  .score-create-page__symbols .score-notation__action-row--pinned .score-notation__btn-select-clear,
+  .score-create-page__symbols .score-notation__action-row--pinned .score-notation__btn-marks-clear {
+    flex: 1 1 0;
+    min-height: 30px;
+  }
+
+  .score-create-page__symbols .score-notation__symbol-grid,
+  .score-create-page__symbols .score-notation__symbol-grid--jump {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .score-create-page__symbols .score-notation__symbol-btn {
+    min-height: 28px;
+    padding: 3px 4px;
+  }
+
+  /* 위: 가사 · 코드 입력 */
+  .score-create-page__pair-editor-card {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .score-create-page__pair-editor-head {
+    flex: none;
+  }
+
+  .score-create-page__pair-editor-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
     gap: var(--space-2);
-    align-items: start;
-    max-height: min(72vh, 920px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .score-create-page__pair-editor-wrap--compare {
+    flex: 1 1 0;
+    min-height: 168px;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .score-create-page__pair-compare-shell {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .score-create-page__pair-compare-shell > .score-create-page__compare-scroll {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+  }
+
+  /* 편집 영역이 기본 높이보다 클 때 아래 빈 공간까지 입력칸이 채워지도록 */
+  .score-create-page__pair-compare-shell .score-create-page__compare-inner {
+    min-height: 100%;
+  }
+
+  .score-create-page__verse-list {
+    flex: none;
+  }
+
+  /* 경계 핸들 */
+  .score-create-page__split-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: row-resize;
+    touch-action: none;
+    user-select: none;
+    border-radius: var(--radius-sm);
+  }
+
+  .score-create-page__split-grip {
+    width: 48px;
+    height: 4px;
+    border-radius: var(--radius-pill);
+    background: color-mix(in srgb, var(--color-text-sub) 28%, transparent);
+    transition: background-color 0.15s ease, width 0.15s ease;
+  }
+
+  .score-create-page__split-handle:hover .score-create-page__split-grip,
+  .score-create-page__split-handle:active .score-create-page__split-grip {
+    width: 72px;
+    background: var(--color-primary);
+  }
+
+  .score-create-page__split-handle:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+  }
+
+  /* 아래: 미리보기 (A4 폭 유지, 세로는 내부 스크롤) */
+  .score-create-page__preview {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .score-create-page__preview-head {
+    flex: none;
+    margin-bottom: 0;
+  }
+
+  .score-create-page__preview-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
   }
 
-  .score-create-page__symbols-sticky {
-    position: sticky;
-    top: 0;
-    align-self: start;
+  .score-create-page__preview-tools {
     max-height: none;
     overflow: visible;
-    min-width: 0;
-    padding-bottom: var(--space-1);
   }
 }
 
-@media (max-width: 1023px) {
-  .score-create-page__symbols-sticky {
-    position: static;
-    max-height: none;
-    overflow: visible;
+@media screen and (min-width: 1280px) and (min-height: 600px) {
+  .score-create-page {
+    --score-workspace-offset: calc(64px + var(--space-5) + 78px + 40px);
   }
 }
 
@@ -1510,8 +1778,11 @@
 .score-preview {
   --score-a4-content-width: calc(210mm - 24mm);
   --sheet-inline-pad: 10px;
-  --score-symbol-color: #6f7a8c;
-  --score-symbol-color-strong: #5a6374;
+  /* 코드 위 기호 레인 높이 (Segno · Coda · To Coda · 1./2. 괄호) */
+  --score-sign-lane: 14px;
+  /* 진행·반복 기호 공통 포인트 컬러 (Segno · Coda · To Coda · D.S./D.C. · 1./2. · Fine) */
+  --score-symbol-color: #c76a4a;
+  --score-symbol-color-strong: var(--score-symbol-color);
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -1598,20 +1869,23 @@
   width: 100%;
   min-width: 0;
   min-height: 0;
-  margin-bottom: -6px;
+  /* 코드 칸의 위쪽 여백(기호 레인) 위에 겹쳐 그림 → 반복 구간이 있어도 행 높이 동일 */
+  height: var(--score-sign-lane);
+  margin-bottom: calc(-1 * var(--score-sign-lane));
   position: relative;
-  z-index: 1;
+  z-index: 3;
+  pointer-events: none;
 }
 
 .score-preview__volta-bracket {
   grid-row: 1;
   margin-top: 0;
-  border-top: 2px solid var(--score-symbol-color-strong);
-  border-left: 2px solid var(--score-symbol-color-strong);
+  border-top: 1.5px solid var(--score-symbol-color);
+  border-left: 1.5px solid var(--score-symbol-color);
   border-radius: 0;
   position: relative;
-  min-height: 26px;
-  padding: 0 6px 2px;
+  height: var(--score-sign-lane);
+  padding: 0;
   box-sizing: border-box;
 }
 
@@ -1626,11 +1900,11 @@
 
 .score-preview__volta-label {
   position: absolute;
-  left: 5px;
+  left: 4px;
   top: 2px;
-  font: 800 20px/1 'Times New Roman', Times, Georgia, serif;
-  letter-spacing: 0.02em;
-  color: var(--score-symbol-color-strong);
+  font: 700 14px/1 'Times New Roman', Times, Georgia, serif;
+  letter-spacing: 0;
+  color: var(--score-symbol-color);
   z-index: 2;
   pointer-events: none;
 }
@@ -1645,13 +1919,13 @@
   box-shadow: inset 0 0 0 1px rgba(47, 128, 237, 0.35);
 }
 
-/* 악보용 유니코드(세뇨·코다 등) — 악보에서 잘 보이도록 크게 */
+/* 악보용 유니코드(세뇨·코다) — 코드보다 튀지 않는 크기 */
 .score-preview__glyph-music {
   font-family: 'Noto Music', 'Bravura Text', 'Segoe UI Symbol', serif;
-  font-size: 34px;
+  font-size: 20px;
   line-height: 1;
   font-weight: 400;
-  color: var(--score-symbol-color-strong);
+  color: var(--score-symbol-color);
 }
 
 .score-preview__chord-row {
@@ -1707,47 +1981,56 @@
   shape-rendering: geometricPrecision;
 }
 
-/* 코다: 마디 왼쪽 구분선(눈금) 바로 위 */
-.score-preview__staff-coda {
+/*
+ * 기호 레인: 코드 칸 위쪽 여백(코드 글자 위 빈 공간)에 Segno · Coda · To Coda를 작게 표시
+ * - Segno / Coda: 마디 왼쪽 세로선 바로 위 (세로선 중심 정렬)
+ * - To Coda: 마디 오른쪽 세로선 바로 앞에서 끝남 (다음 마디 코드와 겹치지 않게)
+ */
+.score-preview__top-signs {
   position: absolute;
-  left: 0;
-  bottom: 9px;
-  transform: translate(-50%, -100%);
-  line-height: 1;
-  pointer-events: none;
-}
-
-.score-preview__staff-coda .score-preview__glyph-music {
-  font-size: 36px;
-}
-
-/* To Coda: 마디 오른쪽 구분선 위 */
-.score-preview__staff-to-coda {
-  position: absolute;
-  right: 0;
-  bottom: 9px;
-  transform: translate(50%, -100%);
+  top: 0;
+  z-index: 2;
   display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
+  align-items: center;
+  gap: 2px;
+  height: var(--score-sign-lane);
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
+  user-select: none;
 }
 
-.score-preview__staff-to-coda-prefix {
-  font: 700 italic 20px/1 'Times New Roman', Times, Georgia, serif;
-  color: var(--score-symbol-color-strong);
+.score-preview__top-signs--start {
+  left: 0;
+  transform: translateX(-50%);
 }
 
-.score-preview__staff-to-coda .score-preview__glyph-music {
-  font-size: 32px;
+.score-preview__top-signs--end {
+  right: 2px;
+}
+
+.score-preview__top-sign {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  line-height: 1;
+}
+
+/* Noto Music의 Coda 글리프는 Segno보다 작게 그려져 같은 크기로 보이도록 보정 */
+.score-preview__top-sign--coda .score-preview__glyph-music,
+.score-preview__top-sign--to-coda .score-preview__glyph-music {
+  font-size: 24px;
+}
+
+.score-preview__to-coda-prefix {
+  font: 700 italic 14px/1 'Times New Roman', Times, Georgia, serif;
+  color: var(--score-symbol-color);
 }
 
 .score-preview__jump-slot {
   position: relative;
-  min-height: 12px;
-  padding: 1px 0 3px;
+  min-height: 0;
+  padding: 0;
   font: 600 10px/1.25 var(--font-family);
   color: var(--color-text-sub);
   text-align: right;
@@ -1769,13 +2052,13 @@
 }
 
 .score-preview__jump-lead-part {
-  font: 700 italic 24px/1 'Times New Roman', Times, Georgia, serif;
-  color: var(--score-symbol-color-strong);
+  font: 700 italic 16px/1 'Times New Roman', Times, Georgia, serif;
+  color: var(--score-symbol-color);
   flex-shrink: 0;
 }
 
 .score-preview__jump-tail-part {
-  font: 500 italic clamp(0.8rem, 1.5vw, 0.92rem) / 1.5 'Times New Roman', Times, Georgia, serif;
+  font: 500 italic 13px/1 'Times New Roman', Times, Georgia, serif;
   color: var(--score-symbol-color);
   flex-shrink: 1;
   min-width: 0;
@@ -1816,20 +2099,7 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 12px 0 0;
-}
-
-.score-preview__corner-segno {
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  z-index: 2;
-  line-height: 1;
-  pointer-events: none;
-}
-
-.score-preview__corner-segno .score-preview__glyph-music {
-  font-size: 32px;
+  padding: var(--score-sign-lane) 0 0;
 }
 
 .score-preview__sheet-cell--lyrics {
@@ -1852,7 +2122,7 @@
   z-index: 2;
   font: 700 italic 15px/1.1 'Times New Roman', Times, Georgia, serif;
   letter-spacing: 0.02em;
-  color: var(--score-symbol-color-strong);
+  color: var(--score-symbol-color);
   pointer-events: none;
   white-space: nowrap;
 }
@@ -2362,7 +2632,7 @@
   .score-create-page__pair-editor-card,
   .score-create-page__unknown-tool,
   .score-create-page__preview-head,
-  .score-create-page__symbols-sticky,
+  .score-create-page__symbols,
   .score-create-page__preview-btn-group {
     display: none !important;
   }
@@ -2381,9 +2651,27 @@
     background: none !important;
   }
 
+  /* 화면용 내부 스크롤/높이 제한(워크스페이스·태블릿)이 인쇄에서 악보를 자르지 않도록 */
+  .score-create-page,
+  .score-create-page__workspace,
+  .score-create-page__preview,
+  .score-create-page__preview-body {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .score-create-page__topbar,
+  .score-create-page__split-handle {
+    display: none !important;
+  }
+
   .score-create-page__preview-tools {
     display: block !important;
     margin: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   .score-create-page__preview-main {
@@ -2454,18 +2742,6 @@
   .score-notation-panel__pin-actions {
     margin: -7px -8px 4px;
     padding: 7px 8px 8px;
-  }
-}
-
-@media (min-width: 1024px) {
-  .score-create-page__symbols-sticky .score-notation-panel.section-card {
-    padding: 6px 8px;
-    gap: 3px;
-  }
-
-  .score-create-page__symbols-sticky .score-notation-panel__pin-actions {
-    margin: -6px -8px 4px;
-    padding: 6px 8px 7px;
   }
 }
 
@@ -2540,15 +2816,6 @@
   }
 }
 
-/* 노트북 이상 + 우측 스티키 열: 좁은 도구 열 + 기호 버튼 1열 세로 */
-@media (min-width: 1024px) {
-  .score-create-page__symbols-sticky .score-notation__symbol-grid,
-  .score-create-page__symbols-sticky .score-notation__symbol-grid--jump {
-    grid-template-columns: 1fr;
-    gap: 5px;
-  }
-}
-
 .score-notation__symbol-cell {
   position: relative;
   display: flex;
@@ -2563,14 +2830,6 @@
   font: 600 11px/1.25 var(--font-family);
   padding: 5px 6px;
   word-break: break-word;
-}
-
-@media (min-width: 1024px) {
-  .score-create-page__symbols-sticky .score-notation__symbol-btn {
-    min-height: 32px;
-    padding: 4px 6px;
-    font-size: 11px;
-  }
 }
 
 /* 레이아웃을 밀지 않음: 호버·포커스 시 버튼 아래 오버레이로만 표시 */

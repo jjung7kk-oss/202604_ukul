@@ -99,9 +99,10 @@ function StaffMeasureTick({
 }
 
 function jumpLeadAndTail(kind: JumpDirectiveKind): { lead: string; tail: string } {
+  // D.S. 계열은 화면 표시를 `D.S.`로 통일 (전체 이름은 aria-label에 유지)
   const table: Record<JumpDirectiveKind, { lead: string; tail: string }> = {
-    DS_AL_CODA: { lead: 'D.S.', tail: ' al Coda' },
-    DS_AL_FINE: { lead: 'D.S.', tail: ' al Fine' },
+    DS_AL_CODA: { lead: 'D.S.', tail: '' },
+    DS_AL_FINE: { lead: 'D.S.', tail: '' },
     DC_AL_CODA: { lead: 'D.C.', tail: ' al Coda' },
     DC_AL_FINE: { lead: 'D.C.', tail: ' al Fine' },
   }
@@ -358,14 +359,41 @@ export function ScoreSheetPreview({
                               'aria-label': `마디 ${measureIndex + 1} 코드`,
                             })}
                       >
-                        {b.meta?.segno ? (
-                          <span
-                            className="score-preview__corner-segno"
-                            title="Segno"
-                            aria-label="세뇨"
-                          >
-                            <span className="score-preview__glyph-music" aria-hidden="true">
-                              {U_SEGNO}
+                        {b.meta?.segno || b.meta?.coda ? (
+                          <span className="score-preview__top-signs score-preview__top-signs--start">
+                            {b.meta?.segno ? (
+                              <span className="score-preview__top-sign" title="Segno" aria-label="세뇨">
+                                <span className="score-preview__glyph-music" aria-hidden="true">
+                                  {U_SEGNO}
+                                </span>
+                              </span>
+                            ) : null}
+                            {b.meta?.coda ? (
+                              <span
+                                className="score-preview__top-sign score-preview__top-sign--coda"
+                                title="Coda"
+                                aria-label="코다"
+                              >
+                                <span className="score-preview__glyph-music" aria-hidden="true">
+                                  {U_CODA}
+                                </span>
+                              </span>
+                            ) : null}
+                          </span>
+                        ) : null}
+                        {b.meta?.toCoda ? (
+                          <span className="score-preview__top-signs score-preview__top-signs--end">
+                            <span
+                              className="score-preview__top-sign score-preview__top-sign--to-coda"
+                              title="To Coda"
+                              aria-label="투 코다"
+                            >
+                              <span className="score-preview__to-coda-prefix" aria-hidden="true">
+                                To
+                              </span>
+                              <span className="score-preview__glyph-music" aria-hidden="true">
+                                {U_CODA}
+                              </span>
                             </span>
                           </span>
                         ) : null}
@@ -425,19 +453,6 @@ export function ScoreSheetPreview({
                       >
                         {b.meta?.repeatStart ? <RepeatStartSign /> : null}
                         {b.meta?.repeatEnd ? <RepeatEndSign /> : null}
-                        {b.meta?.coda ? (
-                          <span className="score-preview__staff-coda" title="Coda" aria-label="코다">
-                            <span className="score-preview__glyph-music">{U_CODA}</span>
-                          </span>
-                        ) : null}
-                        {b.meta?.toCoda ? (
-                          <span className="score-preview__staff-to-coda" title="To Coda" aria-label="투 코다">
-                            <span className="score-preview__staff-to-coda-prefix" aria-hidden="true">
-                              To
-                            </span>
-                            <span className="score-preview__glyph-music">{U_CODA}</span>
-                          </span>
-                        ) : null}
                       </div>
                     )
                   })}

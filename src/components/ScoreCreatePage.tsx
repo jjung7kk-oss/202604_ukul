@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { useLocation } from 'react-router-dom'
 import {
   saveMyScore,
@@ -57,6 +66,28 @@ const EDITOR_LINE_HEIGHT = 24
 const EDITOR_VERTICAL_PADDING = 20
 const PAIRED_EDITOR_VIEWPORT_PX = 268
 const PAIRED_EDITOR_MIN_DISPLAY_LINES = 12
+
+/** 입력(위) / 미리보기(아래) 워크스페이스 분할 비율 — 입력 영역 높이 % */
+const SPLIT_DEFAULT_PCT = 40
+const SPLIT_MIN_PCT = 22
+const SPLIT_MAX_PCT = 75
+const SPLIT_KEY_STEP_PCT = 5
+const SPLIT_STORAGE_KEY = 'huicode.scoreCreate.splitPct'
+/** 분할 기준 높이 중 입력 영역을 뺀 나머지 대비 실제 미리보기 높이 비율 */
+const PREVIEW_HEIGHT_SCALE = 0.78
+
+function clampSplitPct(pct: number): number {
+  return Math.min(SPLIT_MAX_PCT, Math.max(SPLIT_MIN_PCT, pct))
+}
+
+function readStoredSplitPct(): number {
+  try {
+    const raw = Number(localStorage.getItem(SPLIT_STORAGE_KEY))
+    return Number.isFinite(raw) && raw > 0 ? clampSplitPct(raw) : SPLIT_DEFAULT_PCT
+  } catch {
+    return SPLIT_DEFAULT_PCT
+  }
+}
 
 function createVerse(index: number, lyrics = ''): ScoreVerseDraft {
   return {
@@ -311,6 +342,57 @@ export function ScoreCreatePage() {
   const [selectedUnknownChords, setSelectedUnknownChords] = useState<Set<string>>(() => new Set())
   const [showUnknownChordsBelowTitle, setShowUnknownChordsBelowTitle] = useState(false)
   const [unknownChordBodyMode, setUnknownChordBodyMode] = useState<UnknownChordBodyMode>('none')
+  const [splitPct, setSplitPct] = useState<number>(readStoredSplitPct)
+  const splitRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(SPLIT_STORAGE_KEY, String(Math.round(splitPct)))
+    } catch {
+      // 저장 공간을 쓸 수 없어도 분할 비율은 현재 화면에서만 유지
+    }
+  }, [splitPct])
+
+  const updateSplitFromPointer = useCallback((clientY: number) => {
+    const el = splitRef.current
+    const inputPane = el?.firstElementChild
+    if (!el || !inputPane) return
+    const top = el.getBoundingClientRect().top
+    const inputHeight = inputPane.getBoundingClientRect().height
+    if (inputHeight <= 0) return
+    // 미리보기가 기준 높이보다 짧게 잡혀 있으므로, 입력 영역 높이로 기준 높이를 역산
+    setSplitPct((prev) => {
+      const baseHeight = inputHeight / (prev / 100)
+      return clampSplitPct(((clientY - top) / baseHeight) * 100)
+    })
+  }, [])
+
+  const onSplitHandlePointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return
+    event.preventDefault()
+    event.currentTarget.setPointerCapture(event.pointerId)
+  }, [])
+
+  const onSplitHandlePointerMove = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!event.currentTarget.hasPointerCapture(event.pointerId)) return
+      updateSplitFromPointer(event.clientY)
+    },
+    [updateSplitFromPointer],
+  )
+
+  const onSplitHandleKeyDown = useCallback((event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setSplitPct((p) => clampSplitPct(p - SPLIT_KEY_STEP_PCT))
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setSplitPct((p) => clampSplitPct(p + SPLIT_KEY_STEP_PCT))
+    } else if (event.key === 'Home' || event.key === 'Enter') {
+      event.preventDefault()
+      setSplitPct(SPLIT_DEFAULT_PCT)
+    }
+  }, [])
 
   const verse1 = draft.verses[0]
   const activeVerses = draft.verses
@@ -824,30 +906,12 @@ export function ScoreCreatePage() {
 
   return (
     <section className="score-create-page" aria-labelledby="score-create-title">
-      <div className="chord-finder__hero chord-finder__hero--compact">
-        <h1 id="score-create-title" className="chord-finder__hero-title">
-          악보 만들기
-        </h1>
-        <p className="chord-finder__hero-desc">
-          1절 가사를 먼저 입력한 뒤, 다음 단계에서 마디/코드/미리보기를 연결합니다.
-        </p>
-      </div>
-
-      <div className="score-create-page__workspace">
-        <div className="section-card score-create-page__guide">
-          <h2 className="chord-finder__heading">입력 안내</h2>
-          <ul className="score-create-page__guide-list">
-            <li>가사는 일반 텍스트처럼 입력합니다.</li>
-            <li>Enter는 줄바꿈으로 사용합니다.</li>
-            <li>
-              <code>/</code>는 이후 단계에서 마디 구분 기호로 사용할 예정입니다.
-            </li>
-          </ul>
-        </div>
-
-        <div className="section-card score-create-page__manage">
-          <div className="score-create-page__manage-head">
-            <h2 className="chord-finder__heading">악보 저장</h2>
+      <div className="section-card score-create-page__manage score-create-page__topbar">
+        <div className="score-create-page__topbar-row">
+          <div className="score-create-page__topbar-title">
+            <h1 id="score-create-title" className="chord-finder__hero-title">
+              악보 만들기
+            </h1>
             <p className="score-create-page__manage-current">
               {currentScoreId ? '수정 모드' : '새 악보 모드'}
             </p>
@@ -896,188 +960,231 @@ export function ScoreCreatePage() {
               새 악보
             </button>
           </div>
-          {actionError ? (
-            <p className="chord-edit__error" role="alert">
-              {actionError}
-            </p>
-          ) : null}
-          {actionOk ? (
-            <p className="chord-edit__ok" role="status">
-              {actionOk}
-            </p>
-          ) : null}
         </div>
+        {actionError ? (
+          <p className="chord-edit__error" role="alert">
+            {actionError}
+          </p>
+        ) : null}
+        {actionOk ? (
+          <p className="chord-edit__ok" role="status">
+            {actionOk}
+          </p>
+        ) : null}
+      </div>
 
+      <div
+        ref={splitRef}
+        className="score-create-page__workspace"
+        style={
+          {
+            '--score-split-input': splitPct / 100,
+            '--score-preview-scale': PREVIEW_HEIGHT_SCALE,
+          } as CSSProperties
+        }
+      >
         {verse1 ? (
           <div className="section-card score-create-page__pair-editor-card">
             <div className="score-create-page__pair-editor-head">
               <h2 className="chord-finder__heading">가사 · 코드 입력</h2>
-              <button
-                type="button"
-                className="chord-edit__btn chord-edit__btn--secondary"
-                onClick={addVerse}
-                disabled={!canAddVerse}
-              >
-                절 추가
-              </button>
+              <div className="score-create-page__pair-editor-head-actions">
+                <details className="score-create-page__guide">
+                  <summary className="score-create-page__guide-summary">입력 안내</summary>
+                  <ul className="score-create-page__guide-list">
+                    <li>가사는 일반 텍스트처럼 입력합니다.</li>
+                    <li>Enter는 줄바꿈으로 사용합니다.</li>
+                    <li>
+                      <code>/</code>로 마디를 구분합니다. 가사와 코드는 같은 줄끼리 대응합니다.
+                    </li>
+                  </ul>
+                </details>
+                <button
+                  type="button"
+                  className="chord-edit__btn chord-edit__btn--secondary"
+                  onClick={addVerse}
+                  disabled={!canAddVerse}
+                >
+                  절 추가
+                </button>
+              </div>
             </div>
 
-            <div className="score-create-page__pair-editor-wrap score-create-page__pair-editor-wrap--compare">
-              <label className="chord-edit__label score-create-page__pair-editor-label" htmlFor={verse1.id}>
-                <span className="chord-edit__label-text">{verse1.label} 가사</span>
-              </label>
-              <label
-                className="chord-edit__label score-create-page__pair-editor-label"
-                htmlFor={`${verse1.id}-chords`}
-              >
-                <span className="chord-edit__label-text">공통 코드</span>
-              </label>
+            <div className="score-create-page__pair-editor-body">
+              <div className="score-create-page__pair-editor-wrap score-create-page__pair-editor-wrap--compare">
+                <label className="chord-edit__label score-create-page__pair-editor-label" htmlFor={verse1.id}>
+                  <span className="chord-edit__label-text">{verse1.label} 가사</span>
+                </label>
+                <label
+                  className="chord-edit__label score-create-page__pair-editor-label"
+                  htmlFor={`${verse1.id}-chords`}
+                >
+                  <span className="chord-edit__label-text">공통 코드</span>
+                </label>
 
-              <div className="score-create-page__pair-compare-shell">
-                <div className="score-create-page__compare-scroll">
-                  <div
-                    className={`score-create-page__compare-inner${selectedLineIndex != null ? ' score-create-page__compare-inner--has-selected-line' : ''}`}
-                    style={{ height: `${pairedCompareInnerHeightPx}px` }}
-                  >
-                    <div className="score-create-page__compare-zebra" aria-hidden />
-                    <div className="score-create-page__compare-grid">
-                      <div className="score-create-page__line-gutter score-create-page__line-gutter--pair" aria-hidden="true">
-                        <div className="score-create-page__line-gutter-track score-create-page__line-gutter-track--pair">
-                          {pairedEditorDocumentLineNumbers.map((lineNo) => (
-                            <span key={`lyric-line-${lineNo}`} className="score-create-page__line-no">
-                              {lineNo}
-                            </span>
-                          ))}
+                <div className="score-create-page__pair-compare-shell">
+                  <div className="score-create-page__compare-scroll">
+                    <div
+                      className={`score-create-page__compare-inner${selectedLineIndex != null ? ' score-create-page__compare-inner--has-selected-line' : ''}`}
+                      style={{ height: `${pairedCompareInnerHeightPx}px` }}
+                    >
+                      <div className="score-create-page__compare-zebra" aria-hidden />
+                      <div className="score-create-page__compare-grid">
+                        <div className="score-create-page__line-gutter score-create-page__line-gutter--pair" aria-hidden="true">
+                          <div className="score-create-page__line-gutter-track score-create-page__line-gutter-track--pair">
+                            {pairedEditorDocumentLineNumbers.map((lineNo) => (
+                              <span key={`lyric-line-${lineNo}`} className="score-create-page__line-no">
+                                {lineNo}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                      <div className="score-create-page__pair-cell-stack">
-                        <div className="score-create-page__textarea-overlay" aria-hidden="true">
-                          {selectedLineIndex != null ? (
-                            <span
-                              className="score-create-page__overlay-line-highlight"
-                              style={{ top: `${10 + selectedLineIndex * EDITOR_LINE_HEIGHT}px` }}
-                            />
-                          ) : null}
+                        <div className="score-create-page__pair-cell-stack">
+                          <div className="score-create-page__textarea-overlay" aria-hidden="true">
+                            {selectedLineIndex != null ? (
+                              <span
+                                className="score-create-page__overlay-line-highlight"
+                                style={{ top: `${10 + selectedLineIndex * EDITOR_LINE_HEIGHT}px` }}
+                              />
+                            ) : null}
+                          </div>
+                          <textarea
+                            id={verse1.id}
+                            className="score-create-page__textarea score-create-page__textarea--pair-cell"
+                            value={verse1.lyrics}
+                            onChange={(event) => updateVerseLyrics(verse1.id, event.target.value)}
+                            placeholder="가사를 여러 줄로 자유롭게 입력해 주세요."
+                            wrap="off"
+                            rows={1}
+                            spellCheck
+                          />
                         </div>
-                        <textarea
-                          id={verse1.id}
-                          className="score-create-page__textarea score-create-page__textarea--pair-cell"
-                          value={verse1.lyrics}
-                          onChange={(event) => updateVerseLyrics(verse1.id, event.target.value)}
-                          placeholder="가사를 여러 줄로 자유롭게 입력해 주세요."
-                          wrap="off"
-                          rows={1}
-                          spellCheck
-                        />
-                      </div>
-                      <div className="score-create-page__pair-cell-stack">
-                        <div className="score-create-page__textarea-overlay" aria-hidden="true">
-                          {selectedLineIndex != null ? (
-                            <span
-                              className="score-create-page__overlay-line-highlight"
-                              style={{ top: `${10 + selectedLineIndex * EDITOR_LINE_HEIGHT}px` }}
-                            />
-                          ) : null}
-                          {chordSelectedMeasureRect ? (
-                            <span
-                              className="score-create-page__measure-hint"
-                              style={{
-                                left: `${chordSelectedMeasureRect.left}px`,
-                                top: `${chordSelectedMeasureRect.top}px`,
-                                width: `${chordSelectedMeasureRect.width}px`,
-                                height: `${chordSelectedMeasureRect.height}px`,
-                              }}
-                            />
-                          ) : null}
+                        <div className="score-create-page__pair-cell-stack">
+                          <div className="score-create-page__textarea-overlay" aria-hidden="true">
+                            {selectedLineIndex != null ? (
+                              <span
+                                className="score-create-page__overlay-line-highlight"
+                                style={{ top: `${10 + selectedLineIndex * EDITOR_LINE_HEIGHT}px` }}
+                              />
+                            ) : null}
+                            {chordSelectedMeasureRect ? (
+                              <span
+                                className="score-create-page__measure-hint"
+                                style={{
+                                  left: `${chordSelectedMeasureRect.left}px`,
+                                  top: `${chordSelectedMeasureRect.top}px`,
+                                  width: `${chordSelectedMeasureRect.width}px`,
+                                  height: `${chordSelectedMeasureRect.height}px`,
+                                }}
+                              />
+                            ) : null}
+                          </div>
+                          <textarea
+                            id={`${verse1.id}-chords`}
+                            className="score-create-page__textarea score-create-page__textarea--pair-cell score-create-page__textarea--pair-cell-chord"
+                            value={sharedChordText}
+                            onChange={(event) => setSharedChordText(event.target.value)}
+                            placeholder={`(예시) C G7 / Am Em7 / F\n(예시) C / F G7 / C`}
+                            wrap="off"
+                            rows={1}
+                            spellCheck={false}
+                          />
                         </div>
-                        <textarea
-                          id={`${verse1.id}-chords`}
-                          className="score-create-page__textarea score-create-page__textarea--pair-cell score-create-page__textarea--pair-cell-chord"
-                          value={sharedChordText}
-                          onChange={(event) => setSharedChordText(event.target.value)}
-                          placeholder={`(예시) C G7 / Am Em7 / F\n(예시) C / F G7 / C`}
-                          wrap="off"
-                          rows={1}
-                          spellCheck={false}
-                        />
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {activeVerses.slice(1).length > 0 ? (
-              <div className="score-create-page__verse-list">
-                {activeVerses.slice(1).map((verse) => (
-                  <label key={verse.id} className="chord-edit__label score-create-page__verse-label" htmlFor={verse.id}>
-                    <span className="score-create-page__verse-label-head">
-                      <span className="chord-edit__label-text">{verse.label} 가사</span>
-                      <button
-                        type="button"
-                        className="chord-edit__btn chord-edit__btn--secondary score-create-page__verse-remove-btn"
-                        onClick={() => removeVerse(verse.id)}
-                        disabled={verse.lyrics.trim().length > 0}
-                      >
-                        절 삭제
-                      </button>
-                    </span>
-                    <div className="score-create-page__verse-editor-shell">
-                      <div className="score-create-page__compare-scroll score-create-page__compare-scroll--verse">
-                        {(() => {
-                          const verseDisplayLineCount = Math.max(
-                            PAIRED_EDITOR_MIN_DISPLAY_LINES,
-                            countTextLines(verse.lyrics),
-                          )
-                          const verseInnerHeightPx = Math.max(
-                            PAIRED_EDITOR_VIEWPORT_PX,
-                            EDITOR_VERTICAL_PADDING + verseDisplayLineCount * EDITOR_LINE_HEIGHT,
-                          )
-                          const verseLineNos = Array.from(
-                            { length: verseDisplayLineCount },
-                            (_, i) => i + 1,
-                          )
-                          return (
-                            <div
-                              className="score-create-page__compare-inner"
-                              style={{ height: `${verseInnerHeightPx}px` }}
-                            >
-                              <div className="score-create-page__compare-zebra" aria-hidden />
-                              <div className="score-create-page__single-editor-grid">
-                                <div
-                                  className="score-create-page__line-gutter score-create-page__line-gutter--pair"
-                                  aria-hidden="true"
-                                >
-                                  <div className="score-create-page__line-gutter-track score-create-page__line-gutter-track--pair">
-                                    {verseLineNos.map((lineNo) => (
-                                      <span key={`${verse.id}-line-${lineNo}`} className="score-create-page__line-no">
-                                        {lineNo}
-                                      </span>
-                                    ))}
+              {activeVerses.slice(1).length > 0 ? (
+                <div className="score-create-page__verse-list">
+                  {activeVerses.slice(1).map((verse) => (
+                    <label key={verse.id} className="chord-edit__label score-create-page__verse-label" htmlFor={verse.id}>
+                      <span className="score-create-page__verse-label-head">
+                        <span className="chord-edit__label-text">{verse.label} 가사</span>
+                        <button
+                          type="button"
+                          className="chord-edit__btn chord-edit__btn--secondary score-create-page__verse-remove-btn"
+                          onClick={() => removeVerse(verse.id)}
+                          disabled={verse.lyrics.trim().length > 0}
+                        >
+                          절 삭제
+                        </button>
+                      </span>
+                      <div className="score-create-page__verse-editor-shell">
+                        <div className="score-create-page__compare-scroll score-create-page__compare-scroll--verse">
+                          {(() => {
+                            const verseDisplayLineCount = Math.max(
+                              PAIRED_EDITOR_MIN_DISPLAY_LINES,
+                              countTextLines(verse.lyrics),
+                            )
+                            const verseInnerHeightPx = Math.max(
+                              PAIRED_EDITOR_VIEWPORT_PX,
+                              EDITOR_VERTICAL_PADDING + verseDisplayLineCount * EDITOR_LINE_HEIGHT,
+                            )
+                            const verseLineNos = Array.from(
+                              { length: verseDisplayLineCount },
+                              (_, i) => i + 1,
+                            )
+                            return (
+                              <div
+                                className="score-create-page__compare-inner"
+                                style={{ height: `${verseInnerHeightPx}px` }}
+                              >
+                                <div className="score-create-page__compare-zebra" aria-hidden />
+                                <div className="score-create-page__single-editor-grid">
+                                  <div
+                                    className="score-create-page__line-gutter score-create-page__line-gutter--pair"
+                                    aria-hidden="true"
+                                  >
+                                    <div className="score-create-page__line-gutter-track score-create-page__line-gutter-track--pair">
+                                      {verseLineNos.map((lineNo) => (
+                                        <span key={`${verse.id}-line-${lineNo}`} className="score-create-page__line-no">
+                                          {lineNo}
+                                        </span>
+                                      ))}
+                                    </div>
                                   </div>
+                                  <textarea
+                                    id={verse.id}
+                                    className="score-create-page__textarea score-create-page__textarea--pair-cell score-create-page__textarea--verse-lyrics"
+                                    value={verse.lyrics}
+                                    onChange={(event) => updateVerseLyrics(verse.id, event.target.value)}
+                                    placeholder={`${verse.label} 가사를 입력해 주세요.`}
+                                    wrap="off"
+                                    rows={1}
+                                    spellCheck
+                                  />
                                 </div>
-                                <textarea
-                                  id={verse.id}
-                                  className="score-create-page__textarea score-create-page__textarea--pair-cell score-create-page__textarea--verse-lyrics"
-                                  value={verse.lyrics}
-                                  onChange={(event) => updateVerseLyrics(verse.id, event.target.value)}
-                                  placeholder={`${verse.label} 가사를 입력해 주세요.`}
-                                  wrap="off"
-                                  rows={1}
-                                  spellCheck
-                                />
                               </div>
-                            </div>
-                          )
-                        })()}
+                            )
+                          })()}
+                        </div>
                       </div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            ) : null}
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
         ) : null}
+
+        <div
+          className="score-create-page__split-handle"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="입력 · 미리보기 높이 조절"
+          aria-valuemin={SPLIT_MIN_PCT}
+          aria-valuemax={SPLIT_MAX_PCT}
+          aria-valuenow={Math.round(splitPct)}
+          tabIndex={0}
+          title="드래그해서 높이 조절 · 더블클릭하면 기본 비율"
+          onPointerDown={onSplitHandlePointerDown}
+          onPointerMove={onSplitHandlePointerMove}
+          onDoubleClick={() => setSplitPct(SPLIT_DEFAULT_PCT)}
+          onKeyDown={onSplitHandleKeyDown}
+        >
+          <span className="score-create-page__split-grip" aria-hidden="true" />
+        </div>
 
         <div
           className="section-card score-create-page__preview"
@@ -1106,127 +1213,131 @@ export function ScoreCreatePage() {
               </div>
             ) : null}
           </div>
-          {!hasVerse1Input ? (
-            <p className="score-create-page__preview-meta">
-              {activeVerses.map((verse) => verse.label).join(' · ')}
-            </p>
-          ) : null}
-          {hasVerse1Input ? (
-            <>
-              <div className="score-create-page__preview-tools">
-              <div className="score-create-page__preview-main">
-                <ScoreSheetPreview
-                  title={title.trim().length > 0 ? title.trim() : '곡 제목'}
-                  artist={artist.trim()}
-                  lines={previewLines}
-                  notation={notation}
-                  unknownChordShapes={selectedUnknownChordShapeMap}
-                  showUnknownChordsBelowTitle={showUnknownChordsBelowTitle}
-                  unknownChordBodyMode={unknownChordBodyMode}
-                  selectedMeasureKeys={selectedMeasureKeys}
-                  onToggleMeasureKey={toggleMeasureSelection}
-                  interactive
-                />
-              </div>
-              <aside className="score-create-page__symbols-sticky" aria-label="기호 넣기">
-                <ScoreNotationPanel
-                  disabled={savingScore}
-                  selectionSummary={notationSelectionSummary}
-                  endings={notation.endings}
-                  onClearSelection={clearMeasureSelection}
-                  onToggleRepeatStart={() => toggleBoolOnPrimary('repeatStart')}
-                  onToggleRepeatEnd={() => toggleBoolOnPrimary('repeatEnd')}
-                  onToggleSegno={() => toggleBoolOnPrimary('segno')}
-                  onToggleCoda={() => toggleBoolOnPrimary('coda')}
-                  onToggleToCoda={() => toggleBoolOnPrimary('toCoda')}
-                  onToggleFine={() => toggleBoolOnPrimary('fine')}
-                  onSetJump={setJumpOnPrimary}
-                  onClearMeasureMarks={clearMarksOnSelection}
-                  onAddEnding1={() => addEndingBracket(1)}
-                  onAddEnding2={() => addEndingBracket(2)}
-                  onRemoveEnding={removeEnding}
-                />
-              </aside>
-              </div>
-            </>
-          ) : (
-            <p className="chord-finder__load-hint">
-              1절 가사를 입력하면 줄/마디 기준 미리보기가 표시됩니다.
-            </p>
-          )}
-        </div>
-        {hasVerse1Input ? (
-          <div className="score-create-page__unknown-tool section-card section-card--flush">
-            <h3 className="chord-finder__heading">모르는 코드 운지 표시</h3>
-            {usedChordSymbols.length === 0 ? (
-              <p className="score-create-page__unknown-empty">
-                현재 악보에서 코드가 감지되지 않았습니다. 코드 입력을 먼저 확인해 주세요.
+          <div className="score-create-page__preview-body">
+            {!hasVerse1Input ? (
+              <p className="score-create-page__preview-meta">
+                {activeVerses.map((verse) => verse.label).join(' · ')}
               </p>
-            ) : (
+            ) : null}
+            {hasVerse1Input ? (
               <>
-                <div className="score-create-page__unknown-list" role="group" aria-label="모르는 코드 선택">
-                  {usedChordSymbols.map((symbol) => (
-                    <label
-                      key={symbol}
-                      className="score-create-page__unknown-item"
-                      htmlFor={`unknown-chord-${symbol}`}
-                    >
-                      <input
-                        id={`unknown-chord-${symbol}`}
-                        type="checkbox"
-                        checked={selectedUnknownChords.has(symbol)}
-                        onChange={() => toggleUnknownChordSelection(symbol)}
-                      />
-                      <span>{symbol}</span>
-                    </label>
-                  ))}
-                </div>
-                <div className="score-create-page__unknown-options">
-                  <label className="score-create-page__unknown-opt" htmlFor="unknown-position-header">
-                    <input
-                      id="unknown-position-header"
-                      type="checkbox"
-                      checked={showUnknownChordsBelowTitle}
-                      onChange={(event) => setShowUnknownChordsBelowTitle(event.target.checked)}
+                <div className="score-create-page__preview-tools">
+                  <div className="score-create-page__preview-main">
+                    <ScoreSheetPreview
+                      title={title.trim().length > 0 ? title.trim() : '곡 제목'}
+                      artist={artist.trim()}
+                      lines={previewLines}
+                      notation={notation}
+                      unknownChordShapes={selectedUnknownChordShapeMap}
+                      showUnknownChordsBelowTitle={showUnknownChordsBelowTitle}
+                      unknownChordBodyMode={unknownChordBodyMode}
+                      selectedMeasureKeys={selectedMeasureKeys}
+                      onToggleMeasureKey={toggleMeasureSelection}
+                      interactive
                     />
-                    <span>제목 아래 공통 표시</span>
-                  </label>
-                  <label className="score-create-page__unknown-opt" htmlFor="unknown-position-none">
-                    <input
-                      id="unknown-position-none"
-                      type="radio"
-                      name="unknown-body-position"
-                      checked={unknownChordBodyMode === 'none'}
-                      onChange={() => setUnknownChordBodyMode('none')}
-                    />
-                    <span>본문 미표시</span>
-                  </label>
-                  <label className="score-create-page__unknown-opt" htmlFor="unknown-position-first">
-                    <input
-                      id="unknown-position-first"
-                      type="radio"
-                      name="unknown-body-position"
-                      checked={unknownChordBodyMode === 'first'}
-                      onChange={() => setUnknownChordBodyMode('first')}
-                    />
-                    <span>본문 코드 옆 표시 (처음 1회)</span>
-                  </label>
-                  <label className="score-create-page__unknown-opt" htmlFor="unknown-position-all">
-                    <input
-                      id="unknown-position-all"
-                      type="radio"
-                      name="unknown-body-position"
-                      checked={unknownChordBodyMode === 'all'}
-                      onChange={() => setUnknownChordBodyMode('all')}
-                    />
-                    <span>본문 코드 옆 표시 (나올 때마다)</span>
-                  </label>
+                  </div>
                 </div>
               </>
+            ) : (
+              <p className="chord-finder__load-hint">
+                1절 가사를 입력하면 줄/마디 기준 미리보기가 표시됩니다.
+              </p>
             )}
           </div>
+        </div>
+        {hasVerse1Input ? (
+          <aside className="score-create-page__symbols" aria-label="기호 넣기">
+            <ScoreNotationPanel
+              disabled={savingScore}
+              selectionSummary={notationSelectionSummary}
+              endings={notation.endings}
+              onClearSelection={clearMeasureSelection}
+              onToggleRepeatStart={() => toggleBoolOnPrimary('repeatStart')}
+              onToggleRepeatEnd={() => toggleBoolOnPrimary('repeatEnd')}
+              onToggleSegno={() => toggleBoolOnPrimary('segno')}
+              onToggleCoda={() => toggleBoolOnPrimary('coda')}
+              onToggleToCoda={() => toggleBoolOnPrimary('toCoda')}
+              onToggleFine={() => toggleBoolOnPrimary('fine')}
+              onSetJump={setJumpOnPrimary}
+              onClearMeasureMarks={clearMarksOnSelection}
+              onAddEnding1={() => addEndingBracket(1)}
+              onAddEnding2={() => addEndingBracket(2)}
+              onRemoveEnding={removeEnding}
+            />
+          </aside>
         ) : null}
       </div>
+      {hasVerse1Input ? (
+        <div className="score-create-page__unknown-tool section-card section-card--flush">
+          <h3 className="chord-finder__heading">모르는 코드 운지 표시</h3>
+          {usedChordSymbols.length === 0 ? (
+            <p className="score-create-page__unknown-empty">
+              현재 악보에서 코드가 감지되지 않았습니다. 코드 입력을 먼저 확인해 주세요.
+            </p>
+          ) : (
+            <>
+              <div className="score-create-page__unknown-list" role="group" aria-label="모르는 코드 선택">
+                {usedChordSymbols.map((symbol) => (
+                  <label
+                    key={symbol}
+                    className="score-create-page__unknown-item"
+                    htmlFor={`unknown-chord-${symbol}`}
+                  >
+                    <input
+                      id={`unknown-chord-${symbol}`}
+                      type="checkbox"
+                      checked={selectedUnknownChords.has(symbol)}
+                      onChange={() => toggleUnknownChordSelection(symbol)}
+                    />
+                    <span>{symbol}</span>
+                  </label>
+                ))}
+              </div>
+              <div className="score-create-page__unknown-options">
+                <label className="score-create-page__unknown-opt" htmlFor="unknown-position-header">
+                  <input
+                    id="unknown-position-header"
+                    type="checkbox"
+                    checked={showUnknownChordsBelowTitle}
+                    onChange={(event) => setShowUnknownChordsBelowTitle(event.target.checked)}
+                  />
+                  <span>제목 아래 공통 표시</span>
+                </label>
+                <label className="score-create-page__unknown-opt" htmlFor="unknown-position-none">
+                  <input
+                    id="unknown-position-none"
+                    type="radio"
+                    name="unknown-body-position"
+                    checked={unknownChordBodyMode === 'none'}
+                    onChange={() => setUnknownChordBodyMode('none')}
+                  />
+                  <span>본문 미표시</span>
+                </label>
+                <label className="score-create-page__unknown-opt" htmlFor="unknown-position-first">
+                  <input
+                    id="unknown-position-first"
+                    type="radio"
+                    name="unknown-body-position"
+                    checked={unknownChordBodyMode === 'first'}
+                    onChange={() => setUnknownChordBodyMode('first')}
+                  />
+                  <span>본문 코드 옆 표시 (처음 1회)</span>
+                </label>
+                <label className="score-create-page__unknown-opt" htmlFor="unknown-position-all">
+                  <input
+                    id="unknown-position-all"
+                    type="radio"
+                    name="unknown-body-position"
+                    checked={unknownChordBodyMode === 'all'}
+                    onChange={() => setUnknownChordBodyMode('all')}
+                  />
+                  <span>본문 코드 옆 표시 (나올 때마다)</span>
+                </label>
+              </div>
+            </>
+          )}
+        </div>
+      ) : null}
     </section>
   )
 }
