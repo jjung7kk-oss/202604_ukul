@@ -8,12 +8,14 @@ import { ScoreListPage } from './components/ScoreListPage'
 import { ScorePreviewPopoutPage } from './components/ScorePreviewPopoutPage'
 import { TransposePage } from './components/TransposePage'
 import { useAdminAuth } from './hooks/useAdminAuth'
+import { usePageSeo } from './hooks/usePageSeo'
 import './App.css'
 
 function AppLayout() {
   const location = useLocation()
   const { pathname } = location
   const { isAuthenticated, logout } = useAdminAuth()
+  usePageSeo(pathname)
   const finderNavActive =
     pathname === '/' || pathname === '/finder'
   const editNavActive =
