@@ -196,6 +196,9 @@ function LyricFitText({
   )
 }
 
+const SITE_HOST = 'huicode.vercel.app'
+const SITE_URL = `https://${SITE_HOST}/`
+
 export type ScoreSheetPreviewProps = {
   title: string
   artist?: string
@@ -248,10 +251,38 @@ export function ScoreSheetPreview({
       aria-live="polite"
     >
       <header className="score-preview__sheet-head">
-        <h3 className="score-preview__sheet-title">{title}</h3>
-        {artist.trim().length > 0 ? (
-          <p className="score-preview__sheet-artist">{artist.trim()}</p>
-        ) : null}
+        <a
+          className="score-preview__sheet-brand"
+          href={SITE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="후이코드 홈페이지"
+        >
+          <img
+            className="score-preview__sheet-brand-logo"
+            src="/brand_images/images/logo.png"
+            alt="후이코드 로고"
+          />
+        </a>
+        <div className="score-preview__sheet-heading">
+          <h3 className="score-preview__sheet-title">{title}</h3>
+          {artist.trim().length > 0 ? (
+            <p className="score-preview__sheet-artist">{artist.trim()}</p>
+          ) : null}
+        </div>
+        <a
+          className="score-preview__sheet-qr"
+          href={SITE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="후이코드로 이동하는 QR 코드"
+        >
+          <img
+            className="score-preview__sheet-qr-img"
+            src="/brand_images/images/huicode_qr.jpg"
+            alt=""
+          />
+        </a>
       </header>
       {showUnknownChordsBelowTitle && unknownChordShapes.size > 0 ? (
         <section className="score-preview__unknown-band" aria-label="모르는 코드 운지">

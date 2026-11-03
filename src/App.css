@@ -1812,10 +1812,66 @@
 }
 
 .score-preview__sheet-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto) minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--space-3);
   text-align: center;
   padding: 0 0 var(--space-3);
   margin-bottom: var(--space-1);
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+}
+
+.score-preview__sheet-heading {
+  min-width: 0;
+}
+
+/* 머리말 좌측: 후이코드 로고 (제목·QR과 같은 세로 중앙선) */
+.score-preview__sheet-brand {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.score-preview__sheet-brand-logo {
+  height: 28px;
+  width: auto;
+  max-width: 132px;
+  display: block;
+  object-fit: contain;
+}
+
+/* 머리말 우측: 후이코드 QR */
+.score-preview__sheet-qr {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
+
+.score-preview__sheet-qr-img {
+  width: 64px;
+  height: 64px;
+  display: block;
+}
+
+@media (max-width: 520px) {
+  .score-preview__sheet-head {
+    column-gap: var(--space-2);
+  }
+
+  .score-preview__sheet-brand-logo {
+    height: 20px;
+    max-width: 84px;
+  }
+
+  .score-preview__sheet-qr-img {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 .score-preview__sheet-title {
@@ -2620,6 +2676,11 @@
   .score-preview__brand-footer {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  .score-preview__sheet-qr-img {
+    width: 18mm;
+    height: 18mm;
   }
 
   /* 악보 만들기 페이지: 편집 UI 숨기고 악보 미리보기만 인쇄 */
