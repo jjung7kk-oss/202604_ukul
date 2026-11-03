@@ -7,6 +7,8 @@ type Props = {
   className?: string
   /** 악보 미리보기 등 — 선·점 대비를 조금 높임 */
   variant?: 'default' | 'preview'
+  /** 박스보다 그림이 좁을 때 정렬 — 'start'는 왼쪽에 붙임 (악보 본문 코드 위 운지표) */
+  align?: 'center' | 'start'
 }
 
 /** 저장 순서 GCEA → 화면은 위에서 아래 AECG */
@@ -20,7 +22,12 @@ function computeFretSpan(frets: number[]): number {
   return Math.max(4, maxF)
 }
 
-export function HorizontalChordDiagram({ shape, className, variant = 'default' }: Props) {
+export function HorizontalChordDiagram({
+  shape,
+  className,
+  variant = 'default',
+  align = 'center',
+}: Props) {
   const displayFrets = toDisplayFrets(shape.frets)
   const numFrets = computeFretSpan(displayFrets)
   const isPreview = variant === 'preview'
@@ -62,7 +69,7 @@ export function HorizontalChordDiagram({ shape, className, variant = 'default' }
       viewBox={`0 0 ${width} ${height}`}
       width="100%"
       height="100%"
-      preserveAspectRatio="xMidYMid meet"
+      preserveAspectRatio={align === 'start' ? 'xMinYMid meet' : 'xMidYMid meet'}
       role="img"
       aria-label={`코드 운지 ${shape.frets.join('-')}`}
     >

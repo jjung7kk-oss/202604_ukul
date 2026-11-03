@@ -462,6 +462,7 @@ export function ScoreSheetPreview({
                                           shape={unknownShape}
                                           className="score-preview__inline-diagram"
                                           variant="preview"
+                                          align="start"
                                         />
                                       </span>
                                     ) : null}
