@@ -6,4 +6,13 @@ Disallow: /sheet/list
 Disallow: /sheet/create
 Disallow: /api
 
+# 네이버 검색로봇
+User-agent: Yeti
+Allow: /
+Disallow: /admin
+Disallow: /edit
+Disallow: /sheet/list
+Disallow: /sheet/create
+Disallow: /api
+
 Sitemap: https://huicode.vercel.app/sitemap.xml
